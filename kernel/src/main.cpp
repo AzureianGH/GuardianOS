@@ -10,14 +10,13 @@
 #include "tools/lib/libhydrix/hmath/intmath.h"
 #include "tools/lib/libhydrix/hmath/higherbitmath.h"
 #include "tools/lib/libhydrix/hlow/gdt/gdt.h"
-#include "cpuid.h"
-#include "tools/basic.h"
 #include "tools/lib/libhydrix/hmem/smem/smem.h"
 #include "tools/lib/libhydrix/hmem/smem/heap.h"
-//#include "tools/lib/libhydrix/hlow/idt/idt.h"
 #include "tools/lib/libhydrix/hlow/fpu/fpu.h"
 #include "tools/lib/libhydrix/hkey/bkey.h"
 #include "tools/lib/libhydrix/hdisplay/hdisplay.h"
+#include "tools/lib/libhydrix/sdefs.h"
+#include "tools/basic.h"
 //#include "tools/low/gdt/gdt.h"
 // Set the base revision to 2, this is recommended as this is the latest
 // base revision described by the Limine boot protocol specification.
@@ -129,54 +128,12 @@ void TripleFault()
     __asm__ __volatile__("int $0");
 }
 #define __KERNEL__BEFORE__START__TIME 4000
-extern "C" unsigned long long dump_rax();
-extern "C" unsigned long long dump_rbx();
-extern "C" unsigned long long dump_rcx();
-extern "C" unsigned long long dump_rdx();
-extern "C" unsigned long long dump_rsi();
-extern "C" unsigned long long dump_rdi();
-extern "C" unsigned long long dump_rbp();
-extern "C" unsigned long long dump_rsp();
-void fatal_error(const char *str, int num)
-{
-    graphics.clear();
-    //top center
-    graphics.fill_screen(rgb(20, 0, 0));
-    // FUCK MY LIFE BECAUSE THE STUPID FUCKING STRCAT ISNT WORKING WITHOUT A MEMORY ALLOCATOR AND I HAVE TO DO THIS SHIT
-    // NIGHTMARE NIGHTMARE NIGHTMARE NIGHTMARE NIGHTMARE NIGHTMARE NIGHTMARE NIGHTMARE NIGHTMARE
-    console.WriteLineS("FATAL EXCEPTION HAS OCCURED AND THE OS HAS BEEN SHUT DOWN!", rgb(255, 100, 100));
-    graphics.put_string((string)"ERROR: ", 0, 33, rgb(255, 100, 100));
-    graphics.put_string((string)str, 90, 33, rgb(255, 200, 200));
-    graphics.put_string((string)"INT #: ", 0, 66, rgb(255, 100, 100));
-    graphics.put_string(to_string(num), 90, 66, rgb(255, 200, 200));
-    graphics.put_string((string)"RAX: ", 0, 99, rgb(255, 100, 100));
-    graphics.put_string(to_string((uint64_t)dump_rax()), 60, 99, rgb(255, 200, 200));
-    graphics.put_string((string)"RBX: ", 0, 132, rgb(255, 100, 100));
-    graphics.put_string(to_string((uint64_t)dump_rbx()), 60, 132, rgb(255, 200, 200));
-    graphics.put_string((string)"RCX: ", 0, 165, rgb(255, 100, 100));
-    graphics.put_string(to_string((uint64_t)dump_rcx()), 60, 165, rgb(255, 200, 200));
-    graphics.put_string((string)"RDX: ", 0, 198, rgb(255, 100, 100));
-    graphics.put_string(to_string((uint64_t)dump_rdx()), 60, 198, rgb(255, 200, 200));
-    graphics.put_string((string)"RSI: ", 0, 232, rgb(255, 100, 100));
-    graphics.put_string(to_string((uint64_t)dump_rsi()), 60, 231, rgb(255, 200, 200));
-    graphics.put_string((string)"RDI: ", 0, 264, rgb(255, 100, 100));
-    graphics.put_string(to_string((uint64_t)dump_rdi()), 60, 264, rgb(255, 200, 200));
-    graphics.put_string((string)"RBP: ", 0, 297, rgb(255, 100, 100));
-    graphics.put_string(to_string((uint64_t)dump_rbp()), 60, 297, rgb(255, 200, 200));
-    graphics.put_string((string)"RSP: ", 0, 330, rgb(255, 100, 100));
-    graphics.put_string(to_string((uint64_t)dump_rsp()), 60, 330, rgb(255, 200, 200));
-    graphics.put_string((string)"Press any key to reboot...", 0, 363, rgb(255, 100, 100));
-    graphics.Swap();
-    //wait for key press
-    Wait_For_Key();
-    //reboot the bad way
-    TripleFault();
-}
 char* ThreeStrCat(string one, string two, string three)
 {
     return strcat(one, strcat(two, three));
 }
 
+BMPI test_bmp;
 extern "C" void _start() {
     FPU::Enable();
     
@@ -266,6 +223,15 @@ extern "C" void _start() {
     //print in bytes too
     console.WriteLine(ThreeStrCat("Memory Size: ", to_string(memsize / 1024), " KB"), rgb(170, 255, 170));
     console.WriteLine(ThreeStrCat("Memory Size: ", to_string(memsize), " B"), rgb(170, 255, 170));
+    //capture
+    graphics.Swap();
+
+    
+    RudamentaryWait(__KERNEL__BEFORE__START__TIME);
+    test_bmp.data = (int*)test;
+    test_bmp.height = TEST_HEIGHT;
+    test_bmp.width = TEST_WIDTH;
+    graphics.put_image(0, 0, test_bmp);
     graphics.Swap();
     hcf();
 }
