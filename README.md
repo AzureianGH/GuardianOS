@@ -11,12 +11,18 @@ $$    $$/ $$    $$/ $$    $$ |$$ |      $$    $$ |$$ |$$    $$ |$$ |  $$ |      
 
 ```
 <hr>
+# Guardian OS
 
-This OS was written by ***Nathan Hornby***
+This OS was developed by **Nathan Hornby**.
 
-It currently requires an IDT, as that will not work no matter what I do.
-###### ⚠️ Note, It will start without one, you can't do anything that requires interrupts.
+## Current Status
 
-IT IS x64 BIT!!! :D
+Guardian OS currently requires an IDT (Interrupt Descriptor Table). Despite multiple efforts, it is not functioning correctly at this time.
 
-## Uses [libhydrix](https://github.com/AzureianGH/libhydrix) but already comes with the required version.
+### Important Note
+⚠️ Guardian OS will boot without an IDT; however, any functionality requiring interrupts will be non-operational.
+
+### Key Features
+- **64-bit Architecture**: Guardian OS is designed for x64 bit systems.
+- **Built off [Limine C++](https://github.com/limine-bootloader/limine-cpp-template), including [Level-5 Paging](https://en.wikipedia.org/wiki/Intel_5-level_paging).**
+- **Library Dependency**: It utilizes [libhydrix](https://github.com/AzureianGH/libhydrix), and the necessary version is included.
