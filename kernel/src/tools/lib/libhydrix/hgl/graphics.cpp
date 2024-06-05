@@ -1,5 +1,6 @@
 #include "graphics.h"
-
+#include <stdint.h>
+#include <stddef.h>
 //graphics::graphics
 Graphics::Graphics() {
 }
@@ -621,4 +622,50 @@ void Graphics::Swap()
             fb_ptr[y * (framebuffer.pitch / 4) + x] = SwapBuffer[y * (framebuffer.pitch / 4) + x];
         }
     }
+}
+
+void Graphics::put_image(int x, int y, BMPI Bimage)
+{
+    int width = Bimage.width;
+    int height = Bimage.height;
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            put_pixel(x + j, y + i, Bimage.data[i * width + j]);
+        }
+    }
+}
+
+void Graphics::put_pixel_alpha(int x, int y, int color)
+{
+    if (color == 0) return;
+    if (x < 0 || x >= framebuffer.width || y < 0 || y >= framebuffer.height) return;
+    int alpha = (color >> 24) & 0xFF;
+    int r = (color >> 16) & 0xFF;
+    int g = (color >> 8) & 0xFF;
+    int b = color & 0xFF;
+    int bg_color = get_pixel(x, y);
+    int bg_r = (bg_color >> 16) & 0xFF;
+    int bg_g = (bg_color >> 8) & 0xFF;
+    int bg_b = bg_color & 0xFF;
+    int new_r = (r * alpha + bg_r * (255 - alpha)) / 255;
+    int new_g = (g * alpha + bg_g * (255 - alpha)) / 255;
+    int new_b = (b * alpha + bg_b * (255 - alpha)) / 255;
+    put_pixel(x, y, rgb(new_r, new_g, new_b));
+}
+
+void Graphics::put_image_alpha(int x, int y, BMPA Bimage)
+{
+    int width = Bimage.width;
+    int height = Bimage.height;
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            put_pixel_alpha(x + j, y + i, Bimage.data[i * width + j]);
+        }
+    }
+}
+
+int Graphics::get_pixel(int x, int y)
+{
+    volatile uint32_t *fb_ptr = static_cast<volatile uint32_t *>(framebuffer.address);
+    return fb_ptr[y * (framebuffer.pitch / 4) + x];
 }

@@ -3,6 +3,8 @@
 #include "../hmath/intmath.h"
 #include "../hmath/floatmath.h"
 #include "../hstring/string.h"
+#include "../sdefs.h"
+#include "../hmem/smem/heap.h"
 #include <stdint.h>
 #include <stddef.h>
 #include "color.h"
@@ -77,4 +79,24 @@ class Graphics {
         /// @brief Swap the buffer
         /// @warning MUST BE CALLED AFTER DRAWING FOR ANYTHING TO BE VISIBLE
         void Swap();
+        /// @brief Draws an image to the screen (bitmap)
+        /// @param x The horizontal position
+        /// @param y The vertical position
+        /// @param image The bitmap image
+        void put_image(int x, int y, BMPI Bimage);
+        /// @brief Draws a pixel to the screen with transparency
+        /// @param x The horizontal position
+        /// @param y The vertical position
+        /// @param color The color
+        void put_pixel_alpha(int x, int y, int color);
+        /// @brief Draws an image to the screen (bitmap) with transparency
+        /// @param x The horizontal position
+        /// @param y The vertical position
+        /// @param image The bitmap image
+        void put_image_alpha(int x, int y, BMPA Bimage);
+        /// @brief Get a pixel from the screen
+        /// @param x The horizontal position
+        /// @param y The vertical position
+        /// @return The color of the pixel
+        int get_pixel(int x, int y);
 };
