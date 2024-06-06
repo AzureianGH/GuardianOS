@@ -160,18 +160,17 @@ extern "C" void _start() {
     limine_memmap_response *memmap = memmap_request.response;
     //memory in bytes from memmap
     size_t memsize = 0;
-    //graphics.init(framebuffer[0]); 
-    graphics.framebuffer = *framebuffer;
     display.width = framebuffer->width;
     display.height = framebuffer->height;
     display.bpp = framebuffer->bpp;
     display.address = framebuffer->address;
     //one after the framebuffer
-    graphics.SwapBuffer = (uint32_t*)framebuffer->address + framebuffer->width * framebuffer->height;
-    
+    graphics.initgmgr((uint32_t*)framebuffer->address, framebuffer->width, framebuffer->height, framebuffer->pitch);
+    hcf();
     console.graphics = graphics;
     console.currentline = 0;
-    console.pxlinedown = 30;
+    console.pxlinedown = 16;
+    
     graphics.clear();
     BMPA test_bmpa;
     test_bmpa.data = (long*)tridentfull;
@@ -236,8 +235,6 @@ extern "C" void _start() {
     
     RudamentaryWait(__KERNEL__BEFORE__START__TIME);
     graphics.clear();
-    graphics.put_string_new("Hello!", 0, 0, rgb(255, 255, 255));
-    char a = 'a';
     graphics.Swap();
     hcf();
 }

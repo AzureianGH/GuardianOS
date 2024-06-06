@@ -11,8 +11,14 @@
 #include "color.h"
 class Graphics {
     public:
+        long* StringFont;
+        
+        uint64_t pitch;
+        uint64_t width;
+        uint64_t height;
+
         /// @brief The framebuffer (Limine Framebuffer)
-        limine_framebuffer framebuffer;
+        uint32_t* framebuffer;
         /// @brief The buffer to swap with
         uint32_t* SwapBuffer;
         /// @brief The constructor for the Graphics class
@@ -20,7 +26,7 @@ class Graphics {
         /// @brief Initialize the Graphics class
         /// @param fb The framebuffer
         /// @warning THIS FUNCTION WILL CAUSE A TRIPLE FAULT, PLEASE MANUALLY SET THE FRAMEBUFFER
-        void init(limine_framebuffer fb);
+        void initgmgr(uint32_t* fb, uint64_t width, uint64_t height, uint64_t pitch);
         /// @brief Put a pixel on the screen
         /// @param x The horizontal position
         /// @param y The vertical position
@@ -100,16 +106,12 @@ class Graphics {
         /// @param y The vertical position
         /// @return The color of the pixel
         int get_pixel(int x, int y);
-        /// @brief Put a char on the screen with the new font
-        /// @param c The char
-        /// @param x The horizontal position
-        /// @param y The vertical position
-        /// @param color The color
-        void put_char_new(char c, int x, int y, int color);
-        /// @brief Put a string on the screen with the new font
-        /// @param str The string
-        /// @param x The horizontal position
-        /// @param y The vertical position
-        /// @param color The color
-        void put_string_new(char* str, int x, int y, int color);
+        /// @brief Load a font (Bitmap Sprite Sheet)
+        /// @param font The font (Bitmap Sprite Sheet)
+        /// @param glyph_width The width of a glyph (How wide the characters are)
+        /// @param glyph_height The height of a glyph (How tall the characters are)
+        /// @param font_char_width The width of a font character (How close the characters are to each other)
+        /// @param font_sheet_width The width of the font sheet (Example: 256 for a 16x16 font sheet)
+        void load_font(long* font, int glyph_width, int glyph_height, int font_char_width, int font_sheet_width);
+
 };

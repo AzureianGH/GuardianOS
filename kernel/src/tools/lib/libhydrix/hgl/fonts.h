@@ -21,6 +21,11 @@ typedef struct _font {
     glyph_t* glyphs;
 } font_t;
 
+int StringGlyphWidth = 16;
+int StringGlyphHeight = 16;
+int StringFontCharWidth = 8;
+int FontSheetWidth = 256;
+
 #define COURIERNEW_HEIGHT 256
 #define COURIERNEW_WIDTH 256
 
