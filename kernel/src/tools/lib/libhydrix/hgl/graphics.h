@@ -5,6 +5,7 @@
 #include "../hstring/string.h"
 #include "../sdefs.h"
 #include "../hmem/smem/heap.h"
+#include "fonts.h"
 #include <stdint.h>
 #include <stddef.h>
 #include "color.h"
@@ -88,7 +89,7 @@ class Graphics {
         /// @param x The horizontal position
         /// @param y The vertical position
         /// @param color The color
-        void put_pixel_alpha(int x, int y, int color);
+        void put_pixel_alpha(int x, int y, long color);
         /// @brief Draws an image to the screen (bitmap) with transparency
         /// @param x The horizontal position
         /// @param y The vertical position
@@ -99,4 +100,16 @@ class Graphics {
         /// @param y The vertical position
         /// @return The color of the pixel
         int get_pixel(int x, int y);
+        /// @brief Put a char on the screen with the new font
+        /// @param c The char
+        /// @param x The horizontal position
+        /// @param y The vertical position
+        /// @param color The color
+        void put_char_new(char c, int x, int y, int color);
+        /// @brief Put a string on the screen with the new font
+        /// @param str The string
+        /// @param x The horizontal position
+        /// @param y The vertical position
+        /// @param color The color
+        void put_string_new(char* str, int x, int y, int color);
 };

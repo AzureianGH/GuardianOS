@@ -16,6 +16,7 @@
 #include "tools/lib/libhydrix/hkey/bkey.h"
 #include "tools/lib/libhydrix/hdisplay/hdisplay.h"
 #include "tools/lib/libhydrix/sdefs.h"
+#include "tools/lib/libhydrix/hgl/fonts.h"
 #include "tools/basic.h"
 //#include "tools/low/gdt/gdt.h"
 // Set the base revision to 2, this is recommended as this is the latest
@@ -172,6 +173,12 @@ extern "C" void _start() {
     console.currentline = 0;
     console.pxlinedown = 30;
     graphics.clear();
+    BMPA test_bmpa;
+    test_bmpa.data = (long*)tridentfull;
+    test_bmpa.height = TRIDENTFULL_HEIGHT;
+    test_bmpa.width = TRIDENTFULL_WIDTH;
+    console.Clear();
+    graphics.put_image_alpha((display.width / 2) - 250, (display.height / 2) - 250, test_bmpa);
     //if type is 0, add to memsize
     for (size_t i = 0; i < memmap->entry_count; i++)
     {
@@ -180,30 +187,30 @@ extern "C" void _start() {
             memsize += memmap->entries[i]->length;
         }
     }  
-    console.Clear();
-    console.WriteLine("[GuardianOS Version: 0.0.1b]", rgb(170, 170, 255));
+    
+    console.WriteLineS("[GuardianOS Version: 0.0.1b]", rgb(170, 170, 255));
     //init heap
-    console.WriteLine("Initializing Heap...", rgb(170, 170, 170));
+    console.WriteLineS("Initializing Heap...", rgb(170, 170, 170));
     heap_init((uint64_t)framebuffer->address + (uint64_t)framebuffer->width * (uint64_t)framebuffer->height);
-    console.WriteLine("Heap Initialized!", rgb(170, 255, 170));
-    console.WriteLine("Initializing FPU...", rgb(170, 170, 170));
+    console.WriteLineS("Heap Initialized!", rgb(170, 255, 170));
+    console.WriteLineS("Initializing FPU...", rgb(170, 170, 170));
     if (FPU::Is_Enabled())
     {
-        console.WriteLine("FPU Enabled!", rgb(170, 255, 170));
+        console.WriteLineS("FPU Enabled!", rgb(170, 255, 170));
     }
     else
     {
-        console.WriteLine("FPU Not Detected!", rgb(255, 170, 170));
+        console.WriteLineS("FPU Not Detected!", rgb(255, 170, 170));
     }
-    console.WriteLine("Initializing RNG...", rgb(170, 170, 170));
+    console.WriteLineS("Initializing RNG...", rgb(170, 170, 170));
     rand_seed = (long int)framebuffer;
-    console.WriteLine("RNG Initialized!", rgb(170, 255, 170));
+    console.WriteLineS("RNG Initialized!", rgb(170, 255, 170));
     //gdt
-    console.WriteLine("Initializing GDT...", rgb(170, 170, 170));
+    console.WriteLineS("Initializing GDT...", rgb(170, 170, 170));
     
     gdt_init();
-    console.WriteLine("GDT Initialized!", rgb(170, 255, 170));
-    console.WriteLine("Initialization Complete!", rgb(170, 255, 170));
+    console.WriteLineS("GDT Initialized!", rgb(170, 255, 170));
+    console.WriteLineS("Initialization Complete!", rgb(170, 255, 170));
     graphics.Swap();
     RudamentaryWait(__KERNEL__BEFORE__START__TIME);
     graphics.clear();
@@ -228,10 +235,9 @@ extern "C" void _start() {
 
     
     RudamentaryWait(__KERNEL__BEFORE__START__TIME);
-    test_bmp.data = (int*)test;
-    test_bmp.height = TEST_HEIGHT;
-    test_bmp.width = TEST_WIDTH;
-    graphics.put_image(0, 0, test_bmp);
+    graphics.clear();
+    graphics.put_string_new("Hello!", 0, 0, rgb(255, 255, 255));
+    char a = 'a';
     graphics.Swap();
     hcf();
 }

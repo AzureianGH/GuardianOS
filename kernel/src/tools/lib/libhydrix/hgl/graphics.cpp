@@ -536,30 +536,6 @@ void Graphics::put_line(int x1, int y1, int x2, int y2, int color) {
         if (e2 < dy) { err += dx; y1 += sy; }
     }
 }
-/*void Graphics::put_line_gradient(int x1, int y1, int x2, int y2, int color1, int color2) {
-    int dx = MathI::abs(x2 - x1);
-    int dy = MathI::abs(y2 - y1);
-    int sx = x1 < x2 ? 1 : -1;
-    int sy = y1 < y2 ? 1 : -1;
-    int err = (dx > dy ? dx : -dy) / 2;
-    int e2
-    int r1 = (color1 >> 16) & 0xFF;
-    int g1 = (color1 >> 8) & 0xFF;
-    int b1 = color1 & 0xFF;
-    int r2 = (color2 >> 16) & 0xFF;
-    int g2 = (color2 >> 8) & 0xFF;
-    int b2 = color2 & 0xFF;
-    while (true) {
-        int r = lerpf(r1, r2, (float)(x1 - x2) / (float)(x1 - x2));
-        int g = lerpf(g1, g2, (float)(x1 - x2) / (float)(x1 - x2));
-        int b = lerpf(b1, b2, (float)(x1 - x2) / (float)(x1 - x2));
-        put_pixel(x1, y1, rgb(r, g, b));
-        if (x1 == x2 && y1 == y2) break;
-        e2 = err;
-        if (e2 > -dx) { err -= dy; x1 += sx; }
-        if (e2 < dy) { err += dx; y1 += sy; }
-    }
-}*/
 void Graphics::put_rect(int x, int y, int w, int h, int color) {
     put_line(x, y, x + w, y, color);
     put_line(x, y, x, y + h, color);
@@ -635,22 +611,27 @@ void Graphics::put_image(int x, int y, BMPI Bimage)
     }
 }
 
-void Graphics::put_pixel_alpha(int x, int y, int color)
+void Graphics::put_pixel_alpha(int x, int y, long color)
 {
-    if (color == 0) return;
-    if (x < 0 || x >= framebuffer.width || y < 0 || y >= framebuffer.height) return;
-    int alpha = (color >> 24) & 0xFF;
-    int r = (color >> 16) & 0xFF;
-    int g = (color >> 8) & 0xFF;
-    int b = color & 0xFF;
-    int bg_color = get_pixel(x, y);
-    int bg_r = (bg_color >> 16) & 0xFF;
-    int bg_g = (bg_color >> 8) & 0xFF;
-    int bg_b = bg_color & 0xFF;
-    int new_r = (r * alpha + bg_r * (255 - alpha)) / 255;
-    int new_g = (g * alpha + bg_g * (255 - alpha)) / 255;
-    int new_b = (b * alpha + bg_b * (255 - alpha)) / 255;
-    put_pixel(x, y, rgb(new_r, new_g, new_b));
+    if ((color & 0xFF) == 0x00) {
+        return;
+    }
+    //get pixel below the alpha pixel and blend
+    volatile uint32_t *fb_ptr = static_cast<volatile uint32_t *>(SwapBuffer);
+    int pixel = fb_ptr[y * (framebuffer.pitch / 4) + x];
+    int r = (color & 0xFF0000) >> 16;
+    int g = (color & 0xFF00) >> 8;
+    int b = (color & 0xFF);
+    int a = (color & 0xFF000000) >> 24;
+    int r2 = (pixel & 0xFF0000) >> 16;
+    int g2 = (pixel & 0xFF00) >> 8;
+    int b2 = (pixel & 0xFF);
+    int a2 = (pixel & 0xFF000000) >> 24;
+    int r3 = (r * a + r2 * (255 - a)) / 255;
+    int g3 = (g * a + g2 * (255 - a)) / 255;
+    int b3 = (b * a + b2 * (255 - a)) / 255;
+    int a3 = (a * a + a2 * (255 - a)) / 255;
+    fb_ptr[y * (framebuffer.pitch / 4) + x] = (a3 << 24) | (r3 << 16) | (g3 << 8) | b3;
 }
 
 void Graphics::put_image_alpha(int x, int y, BMPA Bimage)
@@ -668,4 +649,57 @@ int Graphics::get_pixel(int x, int y)
 {
     volatile uint32_t *fb_ptr = static_cast<volatile uint32_t *>(framebuffer.address);
     return fb_ptr[y * (framebuffer.pitch / 4) + x];
+}
+
+void Graphics::put_char_new(char c, int x, int y, int color)
+{
+    // Assume each character is 16x16 pixels
+    const int glyph_width = 16;
+    const int glyph_height = 16;
+    const int image_width = 256;
+
+    // Pointer to the start of the font data
+    long *font = (long*)CourierNew;
+
+    // Calculate the starting position of the character 'c' in the font data
+    int char_index = c;
+    long *char_data = font + (char_index * glyph_width * glyph_height);
+
+    // Draw the character at position (x, y)
+    for (int i = 0; i < glyph_height; i++)
+    {
+        for (int j = 0; j < glyph_width; j++)
+        {
+            // Calculate the source pixel position in the character data
+            int pixel_index = i * glyph_width + j;
+
+            // Get the pixel value (assuming monochrome for simplicity)
+            long pixel_value = char_data[pixel_index];
+
+            // If pixel_value is set, draw it with the specified color
+            if (pixel_value)
+            {
+                // Calculate the target pixel position in the image
+                int target_x = x + j;
+                int target_y = y + i;
+
+                // Ensure we're within image boundaries
+                if (target_x >= 0 && target_x < image_width && target_y >= 0 && target_y < image_width)
+                {
+                    // Set the pixel at (target_x, target_y) to the specified color
+                    // Assuming you have a method set_pixel to set a pixel color in the image
+                    put_pixel(target_x, target_y, color);
+                }
+            }
+        }
+    }
+}
+
+
+void Graphics::put_string_new(char *str, int x, int y, int color)
+{
+    int len = strlen(str);
+    for (int i = 0; i < len; i++) {
+        put_char_new(str[i], x + i * 16, y, color);
+    }
 }

@@ -11,5 +11,8 @@ int rgb(int r, int g, int b);
 /// @param b Blue
 /// @param a Alpha
 /// @return The RGBA value as a bitshifted integer
-/// @warning This function has not been tested with the graphics library.
-int rgba(int r, int g, int b, int a);
+long rgba(int r, int g, int b, int a);
+/// @brief Get the RGB value from an RGBA value
+/// @param color The RGBA value
+/// @return The RGB value as a bitshifted integer
+int a2rgb(long color);

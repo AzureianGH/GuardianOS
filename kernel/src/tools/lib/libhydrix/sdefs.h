@@ -104,8 +104,7 @@ typedef struct _bmpi
 /// @brief A Bitmap (Alpha) (int)
 typedef struct _bmpa
 {
-    int* data;
+    long* data; //Must be long because if an int had 0xFFFFFFFF it would be -1
     int width;
     int height;
-    uint8_t* alpha;
 } BMPA;
