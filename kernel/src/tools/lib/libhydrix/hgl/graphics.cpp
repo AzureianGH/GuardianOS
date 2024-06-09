@@ -1,19 +1,32 @@
 #include "graphics.h"
 #include <stdint.h>
 #include <stddef.h>
+#include "../hmem/smem/smem.h"
 //graphics::graphics
 Graphics::Graphics() {
 }
-
+int StringGlyphWidth;
+int StringGlyphHeight;
+int StringFontCharWidth;
+int FontSheetWidth;
 void Graphics::initgmgr(uint32_t* fb, uint64_t width, uint64_t height, uint64_t pitch) {
     
     
     this->framebuffer = fb;
-    
-    SwapBuffer = (uint32_t*)framebuffer + width * height;
+    this->width = width;
+    this->height = height;
+    this->pitch = pitch;
+    StringFont = (long*)CourierNew;
+    StringGlyphWidth = COURIERNEW_GLYPH_WIDTH;
+    StringGlyphHeight = COURIERNEW_GLYPH_HEIGHT;
+    StringFontCharWidth = COURIERNEW_GLYPH_SPACE;
+    FontSheetWidth = COURIERNEW_WIDTH;
+    //set to width * height + address of framebuffer
+    SwapBuffer = (uint32_t*)(fb + width * height);
     return;
 }
 void Graphics::put_pixel(int x, int y, int color) {
+    if (x >= width || y >= height) return;
     volatile uint32_t *fb_ptr = static_cast<volatile uint32_t *>(SwapBuffer);
     fb_ptr[y * (pitch / 4) + x] = color;
 }
@@ -41,7 +54,6 @@ void Graphics::put_char(char c, int x, int y, int color)
     const int image_width = FontSheetWidth;
 
     // Pointer to the start of the font data
-    long *font = StringFont;
 
     int xpos = 0, ypos = 0;
     // Split all the characters into multiple 16x16 images
@@ -54,7 +66,7 @@ void Graphics::put_char(char c, int x, int y, int color)
     // Draw the character
     for (int i = 0; i < glyph_height; i++) {
         for (int j = 0; j < glyph_width; j++) {
-            int pixel = font[char_offset + i * image_width + j];
+            int pixel = StringFont[char_offset + i * image_width + j];
             if (pixel != 0) {
                 put_pixel(x + xpos + j, y + ypos + i, color);
             }
@@ -202,7 +214,7 @@ int Graphics::get_pixel(int x, int y)
 }
 void Graphics::load_font(long *font, int glyph_width, int glyph_height, int font_char_width, int FontSheetWidth)
 {
-    StringFont = font;
+    memcpy(StringFont, font, FontSheetWidth * FontSheetWidth);
     StringGlyphWidth = glyph_width;
     StringGlyphHeight = glyph_height;
     StringFontCharWidth = font_char_width;

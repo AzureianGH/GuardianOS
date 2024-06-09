@@ -123,11 +123,6 @@ void printlog(const char *str, int level, int x, int y)
             break;
     }
 }
-/// @brief This is the worst possible way to reboot a system.
-void TripleFault()
-{
-    __asm__ __volatile__("int $0");
-}
 #define __KERNEL__BEFORE__START__TIME 4000
 char* ThreeStrCat(string one, string two, string three)
 {
@@ -165,19 +160,20 @@ extern "C" void _start() {
     display.bpp = framebuffer->bpp;
     display.address = framebuffer->address;
     //one after the framebuffer
+    heap_init((uint64_t)framebuffer->address + framebuffer->width * framebuffer->height + 2056);
     graphics.initgmgr((uint32_t*)framebuffer->address, framebuffer->width, framebuffer->height, framebuffer->pitch);
-    hcf();
+    
     console.graphics = graphics;
     console.currentline = 0;
     console.pxlinedown = 16;
     
     graphics.clear();
-    BMPA test_bmpa;
-    test_bmpa.data = (long*)tridentfull;
-    test_bmpa.height = TRIDENTFULL_HEIGHT;
-    test_bmpa.width = TRIDENTFULL_WIDTH;
+    BMPI tridentstartup;
+    tridentstartup.data = (int*)tridentfull;
+    tridentstartup.height = TRIDENTFULL_HEIGHT;
+    tridentstartup.width = TRIDENTFULL_WIDTH;
     console.Clear();
-    graphics.put_image_alpha((display.width / 2) - 250, (display.height / 2) - 250, test_bmpa);
+    graphics.put_image((display.width / 2) - 250, (display.height / 2) - 250, tridentstartup);
     //if type is 0, add to memsize
     for (size_t i = 0; i < memmap->entry_count; i++)
     {
@@ -186,30 +182,25 @@ extern "C" void _start() {
             memsize += memmap->entries[i]->length;
         }
     }  
-    
-    console.WriteLineS("[GuardianOS Version: 0.0.1b]", rgb(170, 170, 255));
-    //init heap
-    console.WriteLineS("Initializing Heap...", rgb(170, 170, 170));
-    heap_init((uint64_t)framebuffer->address + (uint64_t)framebuffer->width * (uint64_t)framebuffer->height);
-    console.WriteLineS("Heap Initialized!", rgb(170, 255, 170));
-    console.WriteLineS("Initializing FPU...", rgb(170, 170, 170));
+    console.WriteLine("[GuardianOS Version: 0.0.1b]", rgb(170, 170, 255));
+    console.WriteLine("Initializing FPU...", rgb(170, 170, 170));
     if (FPU::Is_Enabled())
     {
-        console.WriteLineS("FPU Enabled!", rgb(170, 255, 170));
+        console.WriteLine("FPU Enabled!", rgb(170, 255, 170));
     }
     else
     {
-        console.WriteLineS("FPU Not Detected!", rgb(255, 170, 170));
+        console.WriteLine("FPU Not Detected!", rgb(255, 170, 170));
     }
-    console.WriteLineS("Initializing RNG...", rgb(170, 170, 170));
+    console.WriteLine("Initializing RNG...", rgb(170, 170, 170));
     rand_seed = (long int)framebuffer;
-    console.WriteLineS("RNG Initialized!", rgb(170, 255, 170));
+    console.WriteLine("RNG Initialized!", rgb(170, 255, 170));
     //gdt
-    console.WriteLineS("Initializing GDT...", rgb(170, 170, 170));
+    console.WriteLine("Initializing GDT...", rgb(170, 170, 170));
     
     gdt_init();
-    console.WriteLineS("GDT Initialized!", rgb(170, 255, 170));
-    console.WriteLineS("Initialization Complete!", rgb(170, 255, 170));
+    console.WriteLine("GDT Initialized!", rgb(170, 255, 170));
+    console.WriteLine("Initialization Complete!", rgb(170, 255, 170));
     graphics.Swap();
     RudamentaryWait(__KERNEL__BEFORE__START__TIME);
     graphics.clear();
@@ -231,10 +222,12 @@ extern "C" void _start() {
     console.WriteLine(ThreeStrCat("Memory Size: ", to_string(memsize), " B"), rgb(170, 255, 170));
     //capture
     graphics.Swap();
-
-    
     RudamentaryWait(__KERNEL__BEFORE__START__TIME);
     graphics.clear();
-    graphics.Swap();
+    console.ClearS();
+
+    
+    //Halt Forever [END OF KERNEL CODE]
     hcf();
+    
 }

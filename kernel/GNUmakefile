@@ -61,8 +61,8 @@ override SHARED_FLAGS := \
     -fPIE \
     -m64 \
     -march=x86-64 \
-    -mno-80387 \
-    -mno-mmx \
+    -m80387 \
+    -mmmx \
     -msse \
     -msse2 \
     -mno-red-zone \
@@ -71,7 +71,8 @@ override SHARED_FLAGS := \
     -Wno-sign-compare \
     -Wno-unused-parameter \
     -O2 \
-    -g 
+    -g \
+    -mhard-float 
 
 # Internal C++ flags that should not be changed by the user.
 override CXXFLAGS += \
