@@ -18,6 +18,7 @@
 #include "tools/lib/libhydrix/sdefs.h"
 #include "tools/lib/libhydrix/hgl/fonts.h"
 #include "tools/basic.h"
+
 //#include "tools/low/gdt/gdt.h"
 // Set the base revision to 2, this is recommended as this is the latest
 // base revision described by the Limine boot protocol specification.
@@ -225,8 +226,12 @@ extern "C" void _start() {
     RudamentaryWait(__KERNEL__BEFORE__START__TIME);
     graphics.clear();
     console.ClearS();
-
-    
+    BMPI image;
+    image.data = (int*)windowsx;
+    image.height = WINDOWSX_HEIGHT;
+    image.width = WINDOWSX_WIDTH;
+    graphics.put_image(0,0, image);
+    graphics.Swap();
     //Halt Forever [END OF KERNEL CODE]
     hcf();
     
