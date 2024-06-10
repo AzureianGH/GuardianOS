@@ -211,11 +211,6 @@ extern "C" void _start() {
     console.WriteLine(strcat(strcat("Resolution: ", to_string(display.width)), strcat("x", to_string(display.height))), rgb(170, 255, 170));
     //print all framebuffers
     console.WriteLine(strcat("Framebuffer Count: ", to_string(framebuffer_request.response->framebuffer_count)), rgb(170, 255, 170));
-    //if framebuffer count is above 1, print Multiple Framebuffers Detected
-    if (framebuffer_request.response->framebuffer_count > 1)
-    {
-        console.WriteLine("Multiple Framebuffers Detected!", rgb(170, 255, 170));
-    }
     //print memory size in MB
     console.WriteLine(ThreeStrCat("Memory Size: ", to_string(memsize / 1024 / 1024), " MB"), rgb(170, 255, 170));
     //print in bytes too
@@ -226,12 +221,8 @@ extern "C" void _start() {
     RudamentaryWait(__KERNEL__BEFORE__START__TIME);
     graphics.clear();
     console.ClearS();
-    BMPI image;
-    image.data = (int*)windowsx;
-    image.height = WINDOWSX_HEIGHT;
-    image.width = WINDOWSX_WIDTH;
-    graphics.put_image(0,0, image);
-    graphics.Swap();
+    console.WriteLine("This is screen one!", rgb(170, 255, 170));
+
     //Halt Forever [END OF KERNEL CODE]
     hcf();
     

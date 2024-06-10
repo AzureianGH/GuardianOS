@@ -72,7 +72,7 @@ override SHARED_FLAGS := \
     -Wno-unused-parameter \
     -O2 \
     -g \
-    -mhard-float 
+    -msoft-float \
 
 # Internal C++ flags that should not be changed by the user.
 override CXXFLAGS += \
