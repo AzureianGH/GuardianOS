@@ -73,6 +73,7 @@ override SHARED_FLAGS := \
     -O2 \
     -g \
     -msoft-float \
+    -fPIC
 
 # Internal C++ flags that should not be changed by the user.
 override CXXFLAGS += \
@@ -100,7 +101,10 @@ override LDFLAGS += \
     --no-dynamic-linker \
     -z text \
     -z max-page-size=0x1000 \
-    -T linker.ld
+    -T linker.ld \
+    -z noexecstack \
+    -g \
+    -PIC
 
 # Internal nasm flags that should not be changed by the user.
 override NASMFLAGS += \
