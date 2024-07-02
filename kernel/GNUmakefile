@@ -18,7 +18,7 @@ endef
 # It is suggested to use a custom built cross toolchain to build a kernel.
 # We are using the standard "c++" here, it may work by using
 # the host system's toolchain, but this is not guaranteed.
-override DEFAULT_CXX := c++
+override DEFAULT_CXX := ../compiler/bin/x86_64-elf-g++
 $(eval $(call DEFAULT_VAR,CXX,$(DEFAULT_CXX)))
 
 # Same thing for "cc" (the C compiler).
@@ -26,7 +26,7 @@ override DEFAULT_CC := cc
 $(eval $(call DEFAULT_VAR,CC,$(DEFAULT_CC)))
 
 # Same thing for "ld" (the linker).
-override DEFAULT_LD := ld
+override DEFAULT_LD := ../compiler/bin/x86_64-elf-ld
 $(eval $(call DEFAULT_VAR,LD,$(DEFAULT_LD)))
 
 # User controllable C++ flags.
@@ -72,13 +72,14 @@ override SHARED_FLAGS := \
     -Wno-unused-parameter \
     -O2 \
     -g \
-    -msoft-float \
+
 
 # Internal C++ flags that should not be changed by the user.
 override CXXFLAGS += \
     -std=gnu++20 \
     -fno-rtti \
     -fno-exceptions \
+    -I./include \
     $(SHARED_FLAGS)
 
 # Internal C flags that should not be changed by the user.
@@ -100,7 +101,8 @@ override LDFLAGS += \
     --no-dynamic-linker \
     -z text \
     -z max-page-size=0x1000 \
-    -T linker.ld
+    -T linker.ld \
+    
 
 # Internal nasm flags that should not be changed by the user.
 override NASMFLAGS += \

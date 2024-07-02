@@ -1,5 +1,5 @@
-#include <cstdint>
-#include <cstddef>
+#include <stdint.h>
+#include <stddef.h>
 #include <limine.h>
 #include "tools/lib/libhydrix/hgl/graphics.h"
 #include "tools/lib/libhydrix/hrand/rand.h"
@@ -13,12 +13,17 @@
 #include "tools/lib/libhydrix/hmem/smem/smem.h"
 #include "tools/lib/libhydrix/hmem/smem/heap.h"
 #include "tools/lib/libhydrix/hlow/fpu/fpu.h"
-#include "tools/lib/libhydrix/hkey/bkey.h"
+#include "tools/lib/libhydrix/hkey/keyboard.h"
 #include "tools/lib/libhydrix/hdisplay/hdisplay.h"
 #include "tools/lib/libhydrix/sdefs.h"
 #include "tools/lib/libhydrix/hgl/fonts.h"
 #include "tools/basic.h"
-
+#include "tools/lib/libhydrix/hlow/idt/idt.h"
+#include "tools/lib/libhydrix/hlow/idt/isr.h"
+#include "tools/lib/libhydrix/hmouse/mouse.h"
+#include "tools/lib/libhydrix/hsyscall/syscall.h"
+#include "tools/lib/libhydrix/hlow/scheduler/scheduler.h"
+#include "tools/lib/libhydrix/hlow/paging/paging.h"
 //#include "tools/low/gdt/gdt.h"
 // Set the base revision to 2, this is recommended as this is the latest
 // base revision described by the Limine boot protocol specification.
@@ -53,6 +58,14 @@ volatile limine_memmap_request memmap_request = {
 };
 }
 
+__attribute__((used, section(".requests")))
+volatile limine_hhdm_request hhdm_request = {
+    .id = LIMINE_HHDM_REQUEST,
+    .revision = 0,
+    .response = nullptr
+};
+
+
 // Finally, define the start and end markers for the Limine requests.
 // These can also be moved anywhere, to any .cpp file, as seen fit.
 
@@ -66,16 +79,15 @@ volatile LIMINE_REQUESTS_END_MARKER;
 
 }
 
-// GCC and Clang reserve the right to generate calls to the following
-// 4 functions even if they are not directly called.
-// Implement them as the C specification mandates.
-// DO NOT remove or rename these functions, or stuff will eventually break!
-// They CAN be moved to a different .cpp file
-
 
 
 // Halt and catch fire function.
 namespace {
+
+void halt() {
+    for (;;)
+        asm ("hlt");
+}
 
 void hcf() {
     asm ("cli");
@@ -94,14 +106,15 @@ extern "C" {
     int __cxa_atexit(void (*)(void *), void *, void *) { return 0; }
     void __cxa_pure_virtual() { hcf(); }
 }
-
+typedef struct {
+        uint8_t byte;
+        uint16_t word;
+        uint32_t dword;
+    } MyStruct;
 // Extern declarations for global constructors array.
 extern void (*__init_array[])();
 extern void (*__init_array_end[])();
 
-// The following will be our kernel's entry point.
-// If renaming _start() to something else, make sure to change the
-// linker script accordingly.
 Graphics graphics;
 Console console;
 void RudamentaryWait(uint64_t wait)
@@ -129,9 +142,17 @@ char* ThreeStrCat(string one, string two, string three)
 {
     return strcat(one, strcat(two, three));
 }
-
+void testproc()
+{
+    while (true)
+    {
+        console.WriteLine("Test Process", rgb(170, 255, 170));
+        RudamentaryWait(1000);
+    }
+}
 BMPI test_bmp;
 extern "C" void _start() {
+    
     FPU::Enable();
     
     
@@ -141,7 +162,7 @@ extern "C" void _start() {
     }
 
     // Call global constructors.
-    for (std::size_t i = 0; &__init_array[i] != __init_array_end; i++) {
+    for (size_t i = 0; &__init_array[i] != __init_array_end; i++) {
         __init_array[i]();
     }
 
@@ -154,14 +175,26 @@ extern "C" void _start() {
     // Fetch the first framebuffer.
     limine_framebuffer *framebuffer = framebuffer_request.response->framebuffers[0];
     limine_memmap_response *memmap = memmap_request.response;
+    limine_hhdm_response *hhdm = hhdm_request.response;
+    Set_LIMINE_MEMMAP_PAGING(memmap->entries);
+    uint64_t offsetofhhdm = hhdm->offset;
     //memory in bytes from memmap
     size_t memsize = 0;
+    for (size_t i = 0; i < memmap->entry_count; i++)
+    {
+        if (memmap->entries[i]->type == 0)
+        {
+            memsize += memmap->entries[i]->length;
+            
+        }
+    } 
     display.width = framebuffer->width;
     display.height = framebuffer->height;
     display.bpp = framebuffer->bpp;
     display.address = framebuffer->address;
     //one after the framebuffer
-    heap_init((uint64_t)framebuffer->address + framebuffer->width * framebuffer->height + 2056);
+    //heap_init the offset of hhdm
+    heap_init(offsetofhhdm);
     graphics.initgmgr((uint32_t*)framebuffer->address, framebuffer->width, framebuffer->height, framebuffer->pitch);
     
     console.graphics = graphics;
@@ -176,14 +209,11 @@ extern "C" void _start() {
     console.Clear();
     graphics.put_image((display.width / 2) - 250, (display.height / 2) - 250, tridentstartup);
     //if type is 0, add to memsize
-    for (size_t i = 0; i < memmap->entry_count; i++)
-    {
-        if (memmap->entries[i]->type == 0)
-        {
-            memsize += memmap->entries[i]->length;
-        }
-    }  
-    console.WriteLine("[GuardianOS Version: 0.0.1b]", rgb(170, 170, 255));
+    
+    set_isr_console(&console);
+    Keyboard_Init(&console);
+    set_mouse_console(&console);
+    syscall_init(&console);
     console.WriteLine("Initializing FPU...", rgb(170, 170, 170));
     if (FPU::Is_Enabled())
     {
@@ -201,14 +231,36 @@ extern "C" void _start() {
     
     gdt_init();
     console.WriteLine("GDT Initialized!", rgb(170, 255, 170));
+    //idt
+    
+    
+    console.WriteLine("Initializing IDT...", rgb(170, 170, 170));
+    isr_install();
+    enable_interrupts();
+    set_pit_freq(1000); // 1000 Hz (1ms)
+    console.WriteLine("IDT Initialized!", rgb(170, 255, 170));
+    //paging
+    console.WriteLine("Initializing Paging...", rgb(170, 170, 170));
+    InitPML4();
+    console.WriteLine("Paging Initialized!", rgb(170, 255, 170));
+
+    
+    //scheduler
+    console.WriteLine("Initializing Scheduler...", rgb(170, 170, 170));
+
+    // TODO: Implement the scheduler
+    init_scheduler();
+
+    console.WriteLine("Scheduler Initialized!", rgb(170, 255, 170));
     console.WriteLine("Initialization Complete!", rgb(170, 255, 170));
+    console.WriteLine(ThreeStrCat("[GuardianOS Version: ", OS_Version_, "]"), rgb(170, 170, 255));
     graphics.Swap();
     RudamentaryWait(__KERNEL__BEFORE__START__TIME);
     graphics.clear();
     console.ClearS();
     console.WriteLine("Welcome to GuardianOS!", rgb(170, 255, 170));
     //print resolution, use strcat and threecat
-    console.WriteLine(strcat(strcat("Resolution: ", to_string(display.width)), strcat("x", to_string(display.height))), rgb(170, 255, 170));
+    console.WriteLine(ThreeStrCat(ThreeStrCat("Resolution: ", to_string(display.width), strcat("x", to_string(display.height))), "x", to_string(framebuffer->bpp)), rgb(170, 255, 170));
     //print all framebuffers
     console.WriteLine(strcat("Framebuffer Count: ", to_string(framebuffer_request.response->framebuffer_count)), rgb(170, 255, 170));
     //print memory size in MB
@@ -221,9 +273,32 @@ extern "C" void _start() {
     RudamentaryWait(__KERNEL__BEFORE__START__TIME);
     graphics.clear();
     console.ClearS();
-    console.WriteLine("This is screen one!", rgb(170, 255, 170));
-
-    //Halt Forever [END OF KERNEL CODE]
-    hcf();
+    console.allow_typing = false;
+    BMPA Cursor;
+    Cursor.data = (long*)cnormal;
+    Cursor.height = CNORMAL_HEIGHT;
+    Cursor.width = CNORMAL_WIDTH;
+    BMPI BGImg;
+    BGImg.data = (int*)OSBG;
+    BGImg.height = OSBG_HEIGHT;
+    BGImg.width = OSBG_WIDTH;
+    char* MouseStateStrings[] = {
+        "MOUSE_NONE",
+        "MOUSE_LEFT",
+        "MOUSE_RIGHT",
+        "MOUSE_MIDDLE",
+        "MOUSE_SCROLL_UP",
+        "MOUSE_SCROLL_DOWN"
+    };
+    while (true)
+    {
+        
+        graphics.put_image_stretch(0, 0, display.width, display.height, BGImg);
+        console.WriteLine(to_string(Get_Current_Mouse_State()), 0xFF0000);
+        graphics.put_image_alpha(get_mouse_x(), get_mouse_y(), Cursor);
+        graphics.Swap();
+        console.Clear();
+    }
+    halt();
     
 }
