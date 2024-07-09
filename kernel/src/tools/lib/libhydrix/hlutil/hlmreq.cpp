@@ -1,4 +1,4 @@
-#include "hlmreq.h"
+#include <libhydrix/hlutil/hlmreq.h>
 //get the memory map request
 static limine_memmap_response *memmap_res;
 static uint64_t Total_Memory_Size_In_Bytes;

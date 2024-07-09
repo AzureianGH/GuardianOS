@@ -1,15 +1,15 @@
-#include "graphics.h"
+#include <libhydrix/hgl/graphics.h>
 #include <stdint.h>
 #include <stddef.h>
-#include "../hmem/smem/smem.h"
-#include "../hmath/fast/fastmath.h"
+#include <libhydrix/hmem/smem/smem.h>
+#include <libhydrix/hmath/fast/fastmath.h>
 // Graphics class constructor
 Graphics::Graphics() {}
 
 // Global variables for font properties
 
 
-void Graphics::initgmgr(uint32_t* fb, uint64_t width, uint64_t height, uint64_t pitch) {
+void Graphics::Init(uint32_t* fb, uint64_t width, uint64_t height, uint64_t pitch) {
     this->framebuffer = fb;
     this->width = width;
     this->height = height;
@@ -19,7 +19,11 @@ void Graphics::initgmgr(uint32_t* fb, uint64_t width, uint64_t height, uint64_t 
     GRAPHICS_StringGlyphHeight = COURIERNEW_GLYPH_HEIGHT;
     GRAPHICS_StringFontSpacing = COURIERNEW_GLYPH_SPACE;
     GRAPHICS_FontSheetWidth = COURIERNEW_WIDTH;
-    SwapBuffer = (uint32_t*)(fb + width * height);
+    // Allocate the swap buffer
+
+    //allocate memory to get rid of bad data
+    kalloc(width * height * sizeof(uint32_t));
+    SwapBuffer = (uint32_t*)kcalloc(width * height * sizeof(uint32_t));
 }
 
 inline void Graphics::put_pixel(int x, int y, int color) {
@@ -27,7 +31,11 @@ inline void Graphics::put_pixel(int x, int y, int color) {
         SwapBuffer[y * (pitch / 4) + x] = color;
     }
 }
-
+void Graphics::put_pixel_ni(int x, int y, int color) {
+    if (x < width && y < height) {
+        SwapBuffer[y * (pitch / 4) + x] = color;
+    }
+}
 void Graphics::fill_screen(int color) {
     uint32_t *fb_ptr = SwapBuffer;
     for (uint64_t y = 0; y < height; ++y) {
@@ -69,8 +77,8 @@ void Graphics::put_string(char *str, int x, int y, int color) {
 
 void Graphics::put_line(int x1, int y1, int x2, int y2, int color) {
     //use void fastmath_abs(int* x);, return is x
-    int dx = retable_fastmath_abs(x2 - x1);
-    int dy = retable_fastmath_abs(y2 - y1);
+    int dx = MathI::abs(x2 - x1);
+    int dy = MathI::abs(y2 - y1);
     int sx = x1 < x2 ? 1 : -1;
     int sy = y1 < y2 ? 1 : -1;
     int err = (dx > dy ? dx : -dy) / 2;
@@ -146,40 +154,36 @@ void Graphics::put_filled_circle(int x0, int y0, int radius, int color) {
     }
 }
 
-void Graphics::Swap() {
+void Graphics::swap() {
     memcpy(framebuffer, SwapBuffer, width * height * sizeof(uint32_t));
 }
 
 void Graphics::put_image(int x, int y, BMPI Bimage) {
-    int colindex = 0;
-    for (int h = 0; h < Bimage.height; h++) {
-        for (int w = 0; w < Bimage.width; w++)
-        {
-            put_pixel(w+x,h+y, Bimage.data[colindex]);
-            colindex++;
+    for (int i = 0; i < Bimage.height; ++i) {
+        for (int j = 0; j < Bimage.width; ++j) {
+            put_pixel(x + j, y + i, Bimage.data[i * Bimage.width + j]);
         }
     }
 }
 
 void Graphics::put_pixel_alpha(int x, int y, long color) {
-    if ((color & 0xFF) == 0x00) return;
+    //put pixel with transparency
+    if (x < width && y < height) {
+        int alpha = (color >> 24) & 0xFF;
+        if (alpha == 0) return;
+        if (alpha == 255) {
+            put_pixel(x, y, color);
+            return;
+        }
+        int fb_color = get_pixel(x, y);
+        int r = ((color >> 16) & 0xFF) * alpha / 255 + ((fb_color >> 16) & 0xFF) * (255 - alpha) / 255;
+        int g = ((color >> 8) & 0xFF) * alpha / 255 + ((fb_color >> 8) & 0xFF) * (255 - alpha) / 255;
+        int b = (color & 0xFF) * alpha / 255 + (fb_color & 0xFF) * (255 - alpha) / 255;
+        put_pixel(x, y, (r << 16) | (g << 8) | b);
+    }
 
-    uint32_t *fb_ptr = SwapBuffer;
-    int pixel = fb_ptr[y * (pitch / 4) + x];
-    int r = (color & 0xFF0000) >> 16;
-    int g = (color & 0xFF00) >> 8;
-    int b = (color & 0xFF);
-    int a = (color & 0xFF000000) >> 24;
-    int r2 = (pixel & 0xFF0000) >> 16;
-    int g2 = (pixel & 0xFF00) >> 8;
-    int b2 = (pixel & 0xFF);
-    int a2 = (pixel & 0xFF000000) >> 24;
-    int r3 = (r * a + r2 * (255 - a)) / 255;
-    int g3 = (g * a + g2 * (255 - a)) / 255;
-    int b3 = (b * a + b2 * (255 - a)) / 255;
-    int a3 = (a * a + a2 * (255 - a)) / 255;
-    fb_ptr[y * (pitch / 4) + x] = (a3 << 24) | (r3 << 16) | (g3 << 8) | b3;
 }
+
 
 void Graphics::put_image_alpha(int x, int y, BMPA Bimage) {
     for (int i = 0; i < Bimage.height; ++i) {
@@ -190,8 +194,7 @@ void Graphics::put_image_alpha(int x, int y, BMPA Bimage) {
 }
 void Graphics::put_image_stretch(int x, int y, int w, int h, BMPI Bimage)
 {
-    //scale the image
-    int colindex = 0;
+
     for (int i = 0; i < h; i++)
     {
         for (int j = 0; j < w; j++)
@@ -229,20 +232,6 @@ void Graphics::load_font(long *font, int glyph_width, int glyph_height, int font
     GRAPHICS_StringFontSpacing = font_char_width;
     GRAPHICS_FontSheetWidth = font_sheet_width;
 }
-
-/*int Graphics::alpha_blend(int fg, int bg, char alpha)
-{
-    int r = (fg & 0xFF0000) >> 16;
-    int g = (fg & 0xFF00) >> 8;
-    int b = (fg & 0xFF);
-    int r2 = (bg & 0xFF0000) >> 16;
-    int g2 = (bg & 0xFF00) >> 8;
-    int b2 = (bg & 0xFF);
-    int r3 = (r * alpha + r2 * (255 - alpha)) / 255;
-    int g3 = (g * alpha + g2 * (255 - alpha)) / 255;
-    int b3 = (b * alpha + b2 * (255 - alpha)) / 255;
-    return (r3 << 16) | (g3 << 8) | b3;
-}*/
 
 inline void get_pixel_from_bitmap(long *bmpdata, int x, int y, int width, int height, int *color) {
     *color = bmpdata[y * width + x];

@@ -1,8 +1,8 @@
-#include "gdt.h"
+#include <libhydrix/hlow/gdt/gdt.h>
 extern "C" void _loadGDTandTSS_S(struct GDTPtr* gdtPtr);
 
 static struct TaskStateSegment taskss;
-static struct GDT gdt;
+static GDT gdt;
 static struct GDTPtr gdtPtr;
 
 void create_descriptors()

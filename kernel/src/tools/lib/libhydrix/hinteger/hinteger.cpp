@@ -1,4 +1,4 @@
-#include "hinteger.h"
+#include <libhydrix/hinteger/hinteger.h>
 
 int Integer::ParseInt(string str)
 {

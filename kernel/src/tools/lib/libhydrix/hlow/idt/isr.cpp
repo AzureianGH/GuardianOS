@@ -1,6 +1,5 @@
-#include "isr.h"
-#include "../../hio/io.h"
-#include "../scheduler/scheduler.h"
+#include <libhydrix/hlow/idt/isr.h>
+#include <libhydrix/hio/io.h>
 
 Console *HY_IDT_CONSOLE;
 void set_isr_console(Console *console)
@@ -280,7 +279,6 @@ void isr_install() {
 
 void IQR0_Handler(registers_t *r) {
   timer_handler(r);
-  schedule(r);
 }
 
 extern "C" void isr_handler(registers_t *r) {

@@ -70,8 +70,11 @@ override SHARED_FLAGS := \
     -Wno-maybe-uninitialized \
     -Wno-sign-compare \
     -Wno-unused-parameter \
+    -Wno-unused-but-set-variable \
     -O2 \
-    -g \
+    -Werror \
+    -Wall \
+    -Wextra \
 
 
 # Internal C++ flags that should not be changed by the user.
@@ -80,6 +83,7 @@ override CXXFLAGS += \
     -fno-rtti \
     -fno-exceptions \
     -I./include \
+    -I./include/libhydrix \
     $(SHARED_FLAGS)
 
 # Internal C flags that should not be changed by the user.

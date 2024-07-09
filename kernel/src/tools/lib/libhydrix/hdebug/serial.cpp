@@ -1,5 +1,6 @@
-#include "serial.h"
-#include "../hio/io.h"
+#include <libhydrix/hdebug/serial.h>
+#include <libhydrix/hio/io.h>
+#include <libhydrix/hdebug/serial.h>
 
 void DebugPrint(const char *str)
 {
@@ -9,4 +10,21 @@ void DebugPrint(const char *str)
     }
 }
 
-//qemu arg for writing the serial output to a file: -serial file:serial.log
+/// @brief Halt the CPU and disable interrupts
+void CLIHalt()
+{
+    asm("cli");
+    for (;;)
+    {
+        asm("hlt");
+    }
+}
+/// @brief Halt the CPU but keep interrupts enabled
+void STIHalt()
+{
+    for (;;)
+    {
+        asm("hlt");
+    }
+}
+// qemu arg for writing the serial output to a file: -serial file:serial.log

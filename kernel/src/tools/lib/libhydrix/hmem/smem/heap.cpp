@@ -1,8 +1,7 @@
-#pragma once
 #include <stddef.h>
 #include <stdint.h>
 
-#include "heap.h"
+#include <libhydrix/hmem/smem/heap.h>
 
 typedef struct mem_block {
     uint64_t size;
@@ -41,7 +40,7 @@ void* kalloc(uint64_t bytes) {
 
     // Allocate a new block from the heap
     mem_block_t* block = (mem_block_t*)mem_heap_end;
-    mem_heap_end += bytes + sizeof(mem_block_t);
+    mem_heap_end = (bytes + sizeof(mem_block_t) + (uint64_t*)mem_heap_end);
 
     block->size = bytes;
     return (void*)(block + 1);
@@ -79,8 +78,7 @@ void* krealloc(void* ptr, uint64_t bytes) {
 void* kcalloc(uint64_t bytes)
 {
     void* ptr = kalloc(bytes);
-    if (ptr) {
-        memset(ptr, 0, bytes);
-    }
+    // Zero out the memory
+    memset(ptr, 0, bytes);
     return ptr;
 }

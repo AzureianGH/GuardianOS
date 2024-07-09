@@ -1,5 +1,5 @@
-#include "sdefs.h"
-#include "hmem/smem/heap.h"
+#include <libhydrix/sdefs.h>
+#include <libhydrix/hmem/smem/heap.h>
 BMPI Stretch_BMPI(BMPI bmp, int width, int height)
 {
     BMPI newbmp;

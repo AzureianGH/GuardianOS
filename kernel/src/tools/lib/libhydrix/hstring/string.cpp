@@ -1,5 +1,5 @@
-#include "string.h"
-#include "../hmem/smem/heap.h"
+#include <libhydrix/hstring/string.h>
+#include <libhydrix/hmem/smem/heap.h>
 
 size_t strlen(const char* str) {
     size_t len = 0;

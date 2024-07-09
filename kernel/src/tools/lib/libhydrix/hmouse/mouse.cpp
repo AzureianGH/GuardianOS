@@ -1,6 +1,7 @@
-#include "mouse.h"
-#include "../hio/io.h"
-#include "../hdebug/serial.h"
+#include <libhydrix/hmouse/mouse.h>
+#include <libhydrix/hio/io.h>
+#include <libhydrix/hdebug/serial.h>
+
 #define MOUSE_ACK 0xFA
 #define MOUSE_NACK 0xFE
 #define MOUSE_ERROR 0xFC
@@ -46,8 +47,9 @@ static uint8_t mouse_read()
     mouse_wait(0);
     return inb(MOUSE_PORT);
 }
-// use 0xF2 to get the mouse ID
+
 uint8_t MouseID = 0;
+
 uint8_t get_mouse_id()
 {
     mouse_wait(1);
@@ -67,30 +69,29 @@ void set_mouse_rate(uint8_t rate)
     mouse_wait(1);
     outb(MOUSE_PORT, rate);
 }
+
 void enable_mouse_z()
 {
-    DebugPrint("[MOUSE] Enabling mouse Z-axis...\n");
     set_mouse_rate(200);
     set_mouse_rate(100);
     set_mouse_rate(80);
     MouseID = get_mouse_id();
-    DebugPrint("[MOUSE] Mouse ID: ");
-    DebugPrint(to_string(MouseID));
-    DebugPrint("\n");
-    DebugPrint("[MOUSE] Mouse Z-axis enabled!\n");
+    DebugPrint(strcat("Mouse ID: ", to_string(MouseID)));
 }
+
 void resetmouse()
 {
     mouse_wait(1);
     outb(MOUSE_COMMAND, 0xFF);
     mouse_read(); // Acknowledge
 }
+
 static void mouse_enable()
 {
-    //Reset the mouse
+    // Reset the mouse
     resetmouse();
     outb(0xD4, 0x64);
-    DebugPrint("[MOUSE] Enabling mouse...\n");
+
     mouse_wait(1);
     outb(MOUSE_COMMAND, 0xA8);
     mouse_wait(1);
@@ -100,23 +101,22 @@ static void mouse_enable()
     outb(MOUSE_COMMAND, 0x60);
     mouse_wait(1);
     outb(MOUSE_PORT, status);
-    DebugPrint("[MOUSE] Mouse enabled!\n");
-
-    DebugPrint("[MOUSE] Setting mouse to default settings...\n");
     mouse_write(0xF6);
     mouse_read(); // Acknowledge
-
+    
     mouse_write(0xF4);
     mouse_read(); // Acknowledge
-    DebugPrint("[MOUSE] Mouse set to default settings!\n");
 }
+
 MouseState State;
 MouseScrollState Scrolling;
 uint8_t MouseScrollDelta;
+
 MouseScroll Get_Mouse_Scroll()
 {
     return (MouseScroll){Scrolling, MouseScrollDelta};
 }
+
 MouseState Get_Current_Mouse_State()
 {
     return State;
@@ -136,29 +136,20 @@ void set_mouse_sensitivity(int new_sensitivity)
 static uint8_t mouse_cycle = 0;
 static int8_t mouse_byte[4];
 
-static uint32_t PrevMouseX = 0;
-static uint32_t PrevMouseY = 0;
-static uint32_t MouseX = 0;
-static uint32_t MouseY = 0;
+static int32_t PrevMouseX = 0;
+static int32_t PrevMouseY = 0;
+static int32_t MouseX = 0;
+static int32_t MouseY = 0;
 
-__attribute__((always_inline))
-uint32_t get_mouse_x()
+int32_t get_mouse_x()
 {
     return MouseX;
 }
-//attribute inline
-__attribute__((always_inline))
-uint32_t get_mouse_y()
+
+int32_t get_mouse_y()
 {
     return MouseY;
 }
-
-uint64_t Mouse_GetPos()
-{
-    return (uint64_t)(MouseX << 32) | MouseY;
-}
-
-
 
 void mouse_handler(registers_t *r)
 {
@@ -168,18 +159,18 @@ void mouse_handler(registers_t *r)
     {
         case 0:
             mouse_byte[0] = mouse_read();
-            //Check if mouse left button is pressed
-            if (mouse_byte[0] & 0x01) //Bit: 1
+            // Check if mouse left button is pressed
+            if (mouse_byte[0] & 0x01) // Bit: 1
             {
                 State = MOUSE_LEFT;
             }
-            //Check if mouse right button is pressed
-            else if (mouse_byte[0] & 0x02) //Bit: 2
+            // Check if mouse right button is pressed
+            else if (mouse_byte[0] & 0x02) // Bit: 2
             {
                 State = MOUSE_RIGHT;
             }
-            //Check if mouse middle button is pressed
-            else if (mouse_byte[0] & 0x04) //Bit: 3
+            // Check if mouse middle button is pressed
+            else if (mouse_byte[0] & 0x04) // Bit: 3
             {
                 State = MOUSE_MIDDLE;
             }
@@ -194,7 +185,6 @@ void mouse_handler(registers_t *r)
             mouse_cycle++;
             return;
         case 2:
-            
             mouse_byte[2] = mouse_read();
 
             x = mouse_byte[1];
@@ -202,16 +192,16 @@ void mouse_handler(registers_t *r)
             if (MouseID != 3) mouse_cycle = 0;
             if (mouse_console)
             {
-                uint64_t screenwidth = mouse_console->graphics.width;
-                uint64_t screenheight = mouse_console->graphics.height;
+                uint64_t screenwidth = mouse_console->graphics->width;
+                uint64_t screenheight = mouse_console->graphics->height;
 
                 MouseX += (int)(x * sensitivity);
                 MouseY -= (int)(y * sensitivity);
 
                 // Clamp the mouse coordinates to the screen dimensions
                 if (MouseX < 0) MouseX = 0;
-                if (MouseY < 0) MouseY = 0;
                 if (MouseX >= screenwidth) MouseX = screenwidth - 1;
+                if (MouseY < 0) MouseY = 0;
                 if (MouseY >= screenheight) MouseY = screenheight - 1;
 
                 PrevMouseX = MouseX;
@@ -219,7 +209,7 @@ void mouse_handler(registers_t *r)
             }
             break;
         case 3:
-            //scroll wheel
+            // Scroll wheel
             mouse_byte[3] = mouse_read();
             MouseScrollDelta = mouse_byte[3];
             if (mouse_byte[3] > 0)

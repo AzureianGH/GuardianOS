@@ -1,33 +1,9 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <limine.h>
-#include "tools/lib/libhydrix/hgl/graphics.h"
-#include "tools/lib/libhydrix/hrand/rand.h"
-#include "tools/lib/libhydrix/hmath/floatmath.h"
-#include "tools/lib/libhydrix/hcon/console.h"
-#include "tools/lib/libhydrix/hstring/string.h"
-#include "tools/lib/libhydrix/hgl/color.h"
-#include "tools/lib/libhydrix/hmath/intmath.h"
-#include "tools/lib/libhydrix/hmath/higherbitmath.h"
-#include "tools/lib/libhydrix/hlow/gdt/gdt.h"
-#include "tools/lib/libhydrix/hmem/smem/smem.h"
-#include "tools/lib/libhydrix/hmem/smem/heap.h"
-#include "tools/lib/libhydrix/hlow/fpu/fpu.h"
-#include "tools/lib/libhydrix/hkey/keyboard.h"
-#include "tools/lib/libhydrix/hdisplay/hdisplay.h"
-#include "tools/lib/libhydrix/sdefs.h"
-#include "tools/lib/libhydrix/hgl/fonts.h"
-#include "tools/basic.h"
-#include "tools/lib/libhydrix/hlow/idt/idt.h"
-#include "tools/lib/libhydrix/hlow/idt/isr.h"
-#include "tools/lib/libhydrix/hmouse/mouse.h"
-#include "tools/lib/libhydrix/hsyscall/syscall.h"
-#include "tools/lib/libhydrix/hlow/scheduler/scheduler.h"
-#include "tools/lib/libhydrix/hlow/paging/paging.h"
-//#include "tools/low/gdt/gdt.h"
-// Set the base revision to 2, this is recommended as this is the latest
-// base revision described by the Limine boot protocol specification.
-// See specification for further info.
+#include <libhydrix/libhydrix.h>
+#include <basic.h>
+
 #define __asm__ __asm
 namespace {
 
@@ -36,12 +12,43 @@ volatile LIMINE_BASE_REVISION(2);
 
 }
 DisplayInfo display;
-// The Limine requests can be placed anywhere, but it is important that
-// the compiler does not optimise them away, so, usually, they should
-// be made volatile or equivalent, _and_ they should be accessed at least
-// once or marked as used with the "used" attribute as done here.
 
 namespace {
+
+__attribute__((used, section(".requests")))
+volatile limine_boot_time_request boot_time_request = {
+    .id = LIMINE_BOOT_TIME_REQUEST,
+    .revision = 0,
+    .response = nullptr
+};
+
+__attribute__((used, section(".requests")))
+volatile limine_bootloader_info_request bootloader_info_request = {
+    .id = LIMINE_BOOTLOADER_INFO_REQUEST,
+    .revision = 0,
+    .response = nullptr
+};
+
+__attribute__((used, section(".requests")))
+volatile limine_dtb_request dtb_request = {
+    .id = LIMINE_DTB_REQUEST,
+    .revision = 0,
+    .response = nullptr
+};
+
+__attribute__((used, section(".requests")))
+volatile limine_efi_memmap_request efi_memmap_request = {
+    .id = LIMINE_EFI_MEMMAP_REQUEST,
+    .revision = 0,
+    .response = nullptr
+};
+
+__attribute__((used, section(".requests")))
+volatile limine_efi_system_table_request efi_system_table_request = {
+    .id = LIMINE_EFI_SYSTEM_TABLE_REQUEST,
+    .revision = 0,
+    .response = nullptr
+};
 
 __attribute__((used, section(".requests")))
 volatile limine_framebuffer_request framebuffer_request = {
@@ -49,14 +56,6 @@ volatile limine_framebuffer_request framebuffer_request = {
     .revision = 0,
     .response = nullptr
 };
-//request memory map
-__attribute__((used, section(".requests")))
-volatile limine_memmap_request memmap_request = {
-    .id = LIMINE_MEMMAP_REQUEST,
-    .revision = 0,
-    .response = nullptr
-};
-}
 
 __attribute__((used, section(".requests")))
 volatile limine_hhdm_request hhdm_request = {
@@ -65,9 +64,28 @@ volatile limine_hhdm_request hhdm_request = {
     .response = nullptr
 };
 
+__attribute__((used, section(".requests")))
+volatile limine_memmap_request memmap_request = {
+    .id = LIMINE_MEMMAP_REQUEST,
+    .revision = 0,
+    .response = nullptr
+};
 
-// Finally, define the start and end markers for the Limine requests.
-// These can also be moved anywhere, to any .cpp file, as seen fit.
+__attribute__((used, section(".requests")))
+volatile limine_rsdp_request rsdp_request = {
+    .id = LIMINE_RSDP_REQUEST,
+    .revision = 0,
+    .response = nullptr
+};
+
+__attribute__((used, section(".requests")))
+volatile limine_smbios_request smbios_request = {
+    .id = LIMINE_SMBIOS_REQUEST,
+    .revision = 0,
+    .response = nullptr
+};
+
+}
 
 namespace {
 
@@ -78,10 +96,6 @@ __attribute__((used, section(".requests_end_marker")))
 volatile LIMINE_REQUESTS_END_MARKER;
 
 }
-
-
-
-// Halt and catch fire function.
 namespace {
 
 void halt() {
@@ -97,21 +111,11 @@ void hcf() {
 }
 
 }
-
-// The following two stubs are required by the Itanium C++ ABI (the one we use,
-// regardless of the "Itanium" nomenclature).
-// Like the memory functions above, these stubs can be moved to a different .cpp file,
-// but should never be removed.
 extern "C" {
     int __cxa_atexit(void (*)(void *), void *, void *) { return 0; }
     void __cxa_pure_virtual() { hcf(); }
 }
-typedef struct {
-        uint8_t byte;
-        uint16_t word;
-        uint32_t dword;
-    } MyStruct;
-// Extern declarations for global constructors array.
+
 extern void (*__init_array[])();
 extern void (*__init_array_end[])();
 
@@ -124,17 +128,6 @@ void RudamentaryWait(uint64_t wait)
     {
         //do math functions to waste time in assembly
         __asm__ __volatile__("nop");
-    }
-}
-void printlog(const char *str, int level, int x, int y)
-{
-    //level 0 = info, 1 = warning, 2 = error, 3 = critical, 4 = debug, 5 = ok
-    switch (level)
-    {
-        //concatenate str with "[INFO] "
-        case 0:
-            graphics.put_string("[INFO] ", x, y, rgb(255, 255, 255));
-            break;
     }
 }
 #define __KERNEL__BEFORE__START__TIME 4000
@@ -150,10 +143,92 @@ void testproc()
         RudamentaryWait(1000);
     }
 }
-BMPI test_bmp;
+BMPI rotate_bmpi(int deg, BMPI BMP_)
+{
+    BMPI BMP;
+    BMP.data = BMP_.data;
+    BMP.height = BMP_.height;
+    BMP.width = BMP_.width;
+    int* data = BMP.data;
+    int* newdata = (int*)kcalloc(BMP.width * BMP.height * display.bpp / 8);
+    int newx = 0;
+    int newy = 0;
+    for (int y = 0; y < BMP.height; y++)
+    {
+        for (int x = 0; x < BMP.width; x++)
+        {
+            newx = x;
+            newy = y;
+            if (deg == 90)
+            {
+                newx = y;
+                newy = BMP.height - x;
+            }
+            else if (deg == 180)
+            {
+                newx = BMP.width - x;
+                newy = BMP.height - y;
+            }
+            else if (deg == 270)
+            {
+                newx = BMP.width - y;
+                newy = x;
+            }
+            newdata[newy * BMP.width + newx] = data[y * BMP.width + x];
+        }
+    }
+    BMP.data = newdata;
+    return BMP;
+}
+
+//reboot the bad way
+void TripleFault()
+{
+    //idt reg set to null
+    idt_register_t idt_reg;
+    idt_reg.base = 0;
+    idt_reg.limit = 0;
+    //lidt
+
+    asm volatile("lidtq %0" : "=m"(idt_reg));
+}
+typedef void (*SimpleProgramFunc)();
+void read_bytes(const uint8_t* src, void* dest, size_t n) {
+    for (size_t i = 0; i < n; ++i) {
+        ((uint8_t*)dest)[i] = src[i];
+    }
+}
+
+void play(uint64_t freq)
+{
+    uint64_t divisor = 1193180 / freq;
+
+    outb(0x43, 0xB6);
+
+    uint8_t l = static_cast<uint8_t>(divisor);
+    uint8_t h = static_cast<uint8_t>(divisor >> 8);
+
+    outb(0x42, l);
+    outb(0x42, h);
+
+    outb(0x61, inb(0x61) | 0x3);
+}
+
+void stop()
+{
+    outb(0x61, inb(0x61) & 0xFC);
+}
+
+void beep(uint64_t freq, uint64_t msec)
+{
+
+    play(freq);
+    msleep(msec);
+    stop();
+}
+
 extern "C" void _start() {
     
-    FPU::Enable();
     
     
     // Ensure the bootloader actually understands our base revision (see spec).
@@ -171,23 +246,14 @@ extern "C" void _start() {
      || framebuffer_request.response->framebuffer_count < 1) {
         hcf();
     }
-
+    FPU::Enable();
     // Fetch the first framebuffer.
     limine_framebuffer *framebuffer = framebuffer_request.response->framebuffers[0];
     limine_memmap_response *memmap = memmap_request.response;
     limine_hhdm_response *hhdm = hhdm_request.response;
-    Set_LIMINE_MEMMAP_PAGING(memmap->entries);
     uint64_t offsetofhhdm = hhdm->offset;
     //memory in bytes from memmap
-    size_t memsize = 0;
-    for (size_t i = 0; i < memmap->entry_count; i++)
-    {
-        if (memmap->entries[i]->type == 0)
-        {
-            memsize += memmap->entries[i]->length;
-            
-        }
-    } 
+    size_t memsize = _retrieve_total_memory(memmap);
     display.width = framebuffer->width;
     display.height = framebuffer->height;
     display.bpp = framebuffer->bpp;
@@ -195,11 +261,10 @@ extern "C" void _start() {
     //one after the framebuffer
     //heap_init the offset of hhdm
     heap_init(offsetofhhdm);
-    graphics.initgmgr((uint32_t*)framebuffer->address, framebuffer->width, framebuffer->height, framebuffer->pitch);
+    graphics.Init((uint32_t*)framebuffer->address, framebuffer->width, framebuffer->height, framebuffer->pitch);
     
-    console.graphics = graphics;
-    console.currentline = 0;
-    console.pxlinedown = 16;
+    
+    console.Init(&graphics, 16, false);
     
     graphics.clear();
     BMPI tridentstartup;
@@ -214,6 +279,7 @@ extern "C" void _start() {
     Keyboard_Init(&console);
     set_mouse_console(&console);
     syscall_init(&console);
+    Set_Console_PCI(&console);
     console.WriteLine("Initializing FPU...", rgb(170, 170, 170));
     if (FPU::Is_Enabled())
     {
@@ -237,25 +303,21 @@ extern "C" void _start() {
     console.WriteLine("Initializing IDT...", rgb(170, 170, 170));
     isr_install();
     enable_interrupts();
-    set_pit_freq(1000); // 1000 Hz (1ms)
+    set_pit_freq(1000);
+    time_init();
     console.WriteLine("IDT Initialized!", rgb(170, 255, 170));
     //paging
     console.WriteLine("Initializing Paging...", rgb(170, 170, 170));
-    InitPML4();
     console.WriteLine("Paging Initialized!", rgb(170, 255, 170));
 
     
     //scheduler
     console.WriteLine("Initializing Scheduler...", rgb(170, 170, 170));
 
-    // TODO: Implement the scheduler
-    init_scheduler();
-
     console.WriteLine("Scheduler Initialized!", rgb(170, 255, 170));
     console.WriteLine("Initialization Complete!", rgb(170, 255, 170));
     console.WriteLine(ThreeStrCat("[GuardianOS Version: ", OS_Version_, "]"), rgb(170, 170, 255));
-    graphics.Swap();
-    RudamentaryWait(__KERNEL__BEFORE__START__TIME);
+    graphics.swap();
     graphics.clear();
     console.ClearS();
     console.WriteLine("Welcome to GuardianOS!", rgb(170, 255, 170));
@@ -268,9 +330,9 @@ extern "C" void _start() {
     //print in bytes too
     console.WriteLine(ThreeStrCat("Memory Size: ", to_string(memsize / 1024), " KB"), rgb(170, 255, 170));
     console.WriteLine(ThreeStrCat("Memory Size: ", to_string(memsize), " B"), rgb(170, 255, 170));
+    pci_init();
     //capture
-    graphics.Swap();
-    RudamentaryWait(__KERNEL__BEFORE__START__TIME);
+    graphics.swap();
     graphics.clear();
     console.ClearS();
     console.allow_typing = false;
@@ -282,23 +344,69 @@ extern "C" void _start() {
     BGImg.data = (int*)OSBG;
     BGImg.height = OSBG_HEIGHT;
     BGImg.width = OSBG_WIDTH;
-    char* MouseStateStrings[] = {
-        "MOUSE_NONE",
-        "MOUSE_LEFT",
-        "MOUSE_RIGHT",
-        "MOUSE_MIDDLE",
-        "MOUSE_SCROLL_UP",
-        "MOUSE_SCROLL_DOWN"
-    };
+    int fps = 0;
+    int frames = 0;
+    int last = 0;
+    Time_t time;
+    Time_t Cent;
+    time = getTime12Hour(EasternTime);
+    Cent = getTime12Hour(CenteralEurope);
+    BMPI Stretched = *stretch_image(&BGImg, display.width, display.height);
     while (true)
     {
         
-        graphics.put_image_stretch(0, 0, display.width, display.height, BGImg);
-        console.WriteLine(to_string(Get_Current_Mouse_State()), 0xFF0000);
+        graphics.put_image(0, 0, Stretched);
+        switch (Get_Current_Mouse_State())
+        {
+            case MouseState::MOUSE_NONE:
+                console.WriteLine("None", 0xFF0000);
+                break;
+            case MouseState::MOUSE_LEFT:
+                console.WriteLine("Left", 0x00FF00);
+                break;
+            case MouseState::MOUSE_RIGHT:
+                console.WriteLine("Right", 0x0000FF);
+                break;
+            case MouseState::MOUSE_MIDDLE:
+                console.WriteLine("Middle", 0xFFFF00);
+                break;
+            default:
+                console.WriteLine("Unknown", 0xFF00FF);
+                break;
+        }
+        console.WriteLine(strcat("FPS: ", to_string(fps)), 0xFAFAFA);
+        console.WriteLine(strcat(ThreeStrCat(strcat("Eastern: ", to_string(time.hours)), strcat(":", strcat(to_string(time.minutes), strcat(":", to_string(time.seconds)))), " "), ""), rgb(170, 255, 170));
+        console.WriteLine(strcat(ThreeStrCat(strcat("Central: ", to_string(Cent.hours)), strcat(":", strcat(to_string(Cent.minutes), strcat(":", to_string(Cent.seconds)))), " "), ""), rgb(170, 255, 170));
         graphics.put_image_alpha(get_mouse_x(), get_mouse_y(), Cursor);
-        graphics.Swap();
+        graphics.swap();
         console.Clear();
+        frames++;
+        //use rtc to get time in seconds getSeconds();
+        if (getSeconds() != last)
+        {
+            last = getSeconds();
+            fps = frames;
+            frames = 0;
+        }
+        time = getTime(EasternTime);
+        Cent = getTime(CenteralEurope);
+        
     }
-    halt();
+    ///
+    /*Time_t time;
+    time = getTime12Hour();
+    char* dow = strcat("Day of Week: ",(char*)DAYOFWEEK(getDayOfWeek()));
+    char* cd = strcat(strcat("Date: ", to_string(getMonth())), strcat("/", strcat(to_string(getDay()), strcat("/", strcat("20",to_string(getYear()))))));
+    while (true)
+    {
+        console.WriteLine(strcat(ThreeStrCat(strcat("Time: ", to_string(time.hours)), strcat(":", strcat(to_string(time.minutes), strcat(":", to_string(time.seconds)))), " "), (time.pm == 1 ? "PM" : "AM")), rgb(170, 255, 170));
+        console.WriteLine(cd, rgb(170, 255, 170));
+        console.WriteLine(dow, rgb(170, 255, 170));
+        graphics.swap();
+        console.Clear();
+        time = getTime12Hour();
+    }*/
     
+
+    halt();
 }

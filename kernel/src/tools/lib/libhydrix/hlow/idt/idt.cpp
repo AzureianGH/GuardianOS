@@ -1,4 +1,4 @@
-#include "idt.h"
+#include <libhydrix/hlow/idt/idt.h>
 #include <stdint.h>
 idt_gate_t idt[IDT_ENTRIES];
 idt_register_t idt_reg;

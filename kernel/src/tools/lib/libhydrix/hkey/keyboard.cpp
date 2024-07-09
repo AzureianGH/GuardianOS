@@ -1,5 +1,5 @@
-#include "keyboard.h"
-#include "../hio/io.h"
+#include <libhydrix/hkey/keyboard.h>
+#include <libhydrix/hio/io.h>
 
 Console* Keyboard_Console_IDT;
 char LastScancode = 0;
@@ -10,11 +10,11 @@ char scancodemap[58] = {
 char upperscancode[58] = {
     0, 0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', 0, 0, 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', 0, 0, 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '"', '~', 0, '|', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', '?', 0, '*', 0, ' '
 };
-static inline bool GetKeyDown(char scancode)
+bool GetKeyDown(char scancode)
 {
     return inb(0x60) == scancode;
 }
-inline char getScancode()
+inline uint8_t getScancode()
 {
     return inb(0x60);
 }
@@ -35,7 +35,7 @@ void keyboard_handler(registers_t *r)
     {
         return;
     }
-    char scancode = getScancode();
+    uint8_t scancode = getScancode();
     if (scancode < 58 && GetKeyDown(scancode))
     {
         //if shift is pressed, capitalize, if backspace, send \b to console

@@ -1,5 +1,5 @@
-#include "pic.h"
-#include "../../hio/io.h"
+#include <libhydrix/hlow/pic/pic.h>
+#include <libhydrix/hio/io.h>
 void PIC_sendEOI(uint8_t irq)
 {
 	if(irq >= 8)

@@ -1,4 +1,4 @@
-#include "floatmath.h"
+#include <libhydrix/hmath/floatmath.h>
 float MathF::abs(float x) {
         return x < 0 ? -x : x;
     }

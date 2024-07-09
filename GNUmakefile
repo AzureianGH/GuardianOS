@@ -1,7 +1,7 @@
 # Nuke built-in rules and variables.
 override MAKEFLAGS += -rR
 
-override IMAGE_NAME := guardianos
+override IMAGE_NAME := GuardianOS
 
 # Convenience macro to reliably declare user overridable variables.
 define DEFAULT_VAR =
@@ -80,7 +80,7 @@ $(IMAGE_NAME).iso: limine kernel
 		iso_root -o $(IMAGE_NAME).iso
 	./limine/limine bios-install $(IMAGE_NAME).iso
 	rm -rf iso_root
-	qemu-system-x86_64 -m 1G -cdrom $(IMAGE_NAME).iso -boot d -serial file:serial.log
+	qemu-system-x86_64 -m 1G -cdrom $(IMAGE_NAME).iso -boot d -audiodev pa,id=speaker -machine pcspk-audiodev=speaker
 
 $(IMAGE_NAME).hdd: limine kernel
 	rm -f $(IMAGE_NAME).hdd

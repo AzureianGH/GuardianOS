@@ -1,5 +1,5 @@
-#include "fpu.h"
-#include "cpuid.h"
+#include <libhydrix/hlow/fpu/fpu.h>
+#include <cpuid.h>
 bool fpu_enabled = false;
 void DoesFPUExist()
 {

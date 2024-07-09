@@ -1,5 +1,5 @@
-#include "higherbitmath.h"
-#include "intmath.h"
+#include <libhydrix/hmath/higherbitmath.h>
+#include <libhydrix/hmath/intmath.h>
 uint128_t Math128::Add(uint128_t a, uint128_t b) {
     uint128_t result;
     result.low = a.low + b.low;
@@ -92,8 +92,8 @@ uint128_t Math128::Neg(uint128_t a) {
 
 uint128_t Math128::Abs(uint128_t a) {
     uint128_t result;
-    result.low = a.low < 0 ? -a.low : a.low;
-    result.high = a.high < 0 ? -a.high : a.high;
+    result.low = a.low;
+    result.high = a.high;
     return result;
 }
 

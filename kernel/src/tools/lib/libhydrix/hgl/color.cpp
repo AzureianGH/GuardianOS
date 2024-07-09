@@ -1,5 +1,5 @@
-#include "color.h"
-#include "../hmem/smem/heap.h"
+#include <libhydrix/hgl/color.h>
+#include <libhydrix/hmem/smem/heap.h>
 int rgb(int r, int g, int b) {
     return (r << 16) | (g << 8) | b;
 }

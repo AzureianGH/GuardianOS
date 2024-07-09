@@ -1,4 +1,4 @@
-#include "intmath.h"
+#include <libhydrix/hmath/intmath.h>
 int MathI::abs(int x) {
     return x < 0 ? -x : x;
 }

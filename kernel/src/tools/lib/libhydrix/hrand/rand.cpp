@@ -1,4 +1,4 @@
-#include "rand.h"
+#include <libhydrix/hrand/rand.h>
 
 int rand() {
     rand_seed = rand_seed * 1103515245 + 12345;
