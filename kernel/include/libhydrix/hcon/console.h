@@ -5,6 +5,8 @@
 
 class Console
 {       
+    private:
+        string* buffer;
     public:
         bool allow_typing = false;
         /// @brief Graphics object
@@ -15,8 +17,8 @@ class Console
         int currentcolumn;
         /// @brief How many pixels to move down
         int pxlinedown;
-        void advance_column(int text_length);
-        void check_line_overflow();
+        void AdvanceColumn(int text_length);
+        void CheckLineOverflow();
         void SetCursor(int x, int y);
         void PutChar(char c);
         void PutCharS(char c);

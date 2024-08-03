@@ -3,6 +3,8 @@
 
 #include <libhydrix/hmem/smem/heap.h>
 
+uint64_t TotalUsedMem = 0;
+
 typedef struct mem_block {
     uint64_t size;
     struct mem_block* next;
@@ -12,12 +14,12 @@ static void* mem_heap_base;
 static void* mem_heap_end;
 static mem_block_t* free_list = NULL;
 
-void heap_init(unsigned long long memsize) {
+void InitializeHeap(unsigned long long memsize) {
     mem_heap_base = (void*)memsize;
     mem_heap_end = mem_heap_base;
 }
 
-void* kalloc(uint64_t bytes) {
+void* KernelAllocate(uint64_t bytes) {
     mem_block_t* prev = NULL;
     mem_block_t* curr = free_list;
 
@@ -43,10 +45,11 @@ void* kalloc(uint64_t bytes) {
     mem_heap_end = (bytes + sizeof(mem_block_t) + (uint64_t*)mem_heap_end);
 
     block->size = bytes;
+    TotalUsedMem += bytes;
     return (void*)(block + 1);
 }
 
-void kfree(void* ptr) {
+void KernelFree(void* ptr) {
     if (!ptr) {
         return;
     }
@@ -54,11 +57,12 @@ void kfree(void* ptr) {
     mem_block_t* block = (mem_block_t*)ptr - 1;
     block->next = free_list;
     free_list = block;
+    TotalUsedMem -= block->size;
 }
 
-void* krealloc(void* ptr, uint64_t bytes) {
+void* KernelReallocate(void* ptr, uint64_t bytes) {
     if (!ptr) {
-        return kalloc(bytes);
+        return KernelAllocate(bytes);
     }
 
     mem_block_t* old_block = (mem_block_t*)ptr - 1;
@@ -66,19 +70,42 @@ void* krealloc(void* ptr, uint64_t bytes) {
         return ptr; // The current block is already large enough
     }
 
-    void* newptr = kalloc(bytes);
+    void* newptr = KernelAllocate(bytes);
     if (newptr) {
         memcpy(newptr, ptr, old_block->size);
-        kfree(ptr);
+        KernelFree(ptr);
     }
-
+    TotalUsedMem -= old_block->size;
     return newptr;
 }
 
-void* kcalloc(uint64_t bytes)
+void* KernelCleanAllocate(uint64_t bytes)
 {
-    void* ptr = kalloc(bytes);
+    void* ptr = KernelAllocate(bytes);
     // Zero out the memory
     memset(ptr, 0, bytes);
     return ptr;
+}
+
+uint64_t GetTotalUsedMem() {
+    return TotalUsedMem;
+}
+
+/// @brief Find blocks that havent been freed and free them
+void CleanHeap() {
+    mem_block_t* prev = NULL;
+    mem_block_t* curr = free_list;
+
+    while (curr) {
+        if ((uint64_t)curr + curr->size == (uint64_t)mem_heap_end) {
+            if (prev) {
+                prev->next = curr->next;
+            } else {
+                free_list = curr->next;
+            }
+            mem_heap_end = curr;
+        }
+        prev = curr;
+        curr = curr->next;
+    }
 }

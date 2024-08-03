@@ -131,15 +131,15 @@ void RudamentaryWait(uint64_t wait)
     }
 }
 #define __KERNEL__BEFORE__START__TIME 4000
-char* ThreeStrCat(string one, string two, string three)
+char* ThreeStringConcatenate(string one, string two, string three)
 {
-    return strcat(one, strcat(two, three));
+    return StringConcatenate(one, StringConcatenate(two, three));
 }
 void testproc()
 {
     while (true)
     {
-        console.WriteLine("Test Process", rgb(170, 255, 170));
+        console.WriteLine("Test Process", IColor::RGB(170, 255, 170));
         RudamentaryWait(1000);
     }
 }
@@ -150,7 +150,7 @@ BMPI rotate_bmpi(int deg, BMPI BMP_)
     BMP.height = BMP_.height;
     BMP.width = BMP_.width;
     int* data = BMP.data;
-    int* newdata = (int*)kcalloc(BMP.width * BMP.height * display.bpp / 8);
+    int* newdata = (int*)KernelCleanAllocate(BMP.width * BMP.height * display.bpp / 8);
     int newx = 0;
     int newy = 0;
     for (int y = 0; y < BMP.height; y++)
@@ -203,31 +203,31 @@ void play(uint64_t freq)
 {
     uint64_t divisor = 1193180 / freq;
 
-    outb(0x43, 0xB6);
+    PortIO::OutByte(0x43, 0xB6);
 
     uint8_t l = static_cast<uint8_t>(divisor);
     uint8_t h = static_cast<uint8_t>(divisor >> 8);
 
-    outb(0x42, l);
-    outb(0x42, h);
+    PortIO::OutByte(0x42, l);
+    PortIO::OutByte(0x42, h);
 
-    outb(0x61, inb(0x61) | 0x3);
+    PortIO::OutByte(0x61, PortIO::InByte(0x61) | 0x3);
 }
 
 void stop()
 {
-    outb(0x61, inb(0x61) & 0xFC);
+    PortIO::OutByte(0x61, PortIO::InByte(0x61) & 0xFC);
 }
 
 void beep(uint64_t freq, uint64_t msec)
 {
 
     play(freq);
-    msleep(msec);
+    PITSleepMS(msec);
     stop();
 }
 
-extern "C" void _start() {
+extern void kernel_main() {
     
     
     
@@ -253,91 +253,93 @@ extern "C" void _start() {
     limine_hhdm_response *hhdm = hhdm_request.response;
     uint64_t offsetofhhdm = hhdm->offset;
     //memory in bytes from memmap
-    size_t memsize = _retrieve_total_memory(memmap);
+    size_t memsize = RetrieveTotalMemory(memmap);
     display.width = framebuffer->width;
     display.height = framebuffer->height;
     display.bpp = framebuffer->bpp;
     display.address = framebuffer->address;
     //one after the framebuffer
     //heap_init the offset of hhdm
-    heap_init(offsetofhhdm);
-    graphics.Init((uint32_t*)framebuffer->address, framebuffer->width, framebuffer->height, framebuffer->pitch);
+    InitializeHeap(offsetofhhdm);
+    graphics.Init((uint32_t*)framebuffer->address, framebuffer->width, framebuffer->height, framebuffer->pitch, framebuffer->bpp, framebuffer->red_mask_shift, framebuffer->green_mask_shift, framebuffer->blue_mask_shift, framebuffer->red_mask_size, framebuffer->green_mask_size, framebuffer->blue_mask_size);
     
     
     console.Init(&graphics, 16, false);
     
-    graphics.clear();
+    graphics.Clear();
     BMPI tridentstartup;
     tridentstartup.data = (int*)tridentfull;
     tridentstartup.height = TRIDENTFULL_HEIGHT;
     tridentstartup.width = TRIDENTFULL_WIDTH;
     console.Clear();
-    graphics.put_image((display.width / 2) - 250, (display.height / 2) - 250, tridentstartup);
+    graphics.DrawImage((display.width / 2) - 250, (display.height / 2) - 250, tridentstartup);
     //if type is 0, add to memsize
     
-    set_isr_console(&console);
-    Keyboard_Init(&console);
-    set_mouse_console(&console);
-    syscall_init(&console);
-    Set_Console_PCI(&console);
-    console.WriteLine("Initializing FPU...", rgb(170, 170, 170));
-    if (FPU::Is_Enabled())
+    SetISRConsole(&console);
+    KeyboardInit(&console);
+    SetMouseConsole(&console);
+    InitializeSyscall(&console);
+    SetPCIConsole(&console);
+    console.WriteLine("Initializing FPU...", IColor::RGB(170, 170, 170));
+    if (FPU::IsFPUEnabled())
     {
-        console.WriteLine("FPU Enabled!", rgb(170, 255, 170));
+        console.WriteLine("FPU Enabled!", IColor::RGB(170, 255, 170));
     }
     else
     {
-        console.WriteLine("FPU Not Detected!", rgb(255, 170, 170));
+        console.WriteLine("FPU Not Detected!", IColor::RGB(255, 170, 170));
     }
-    console.WriteLine("Initializing RNG...", rgb(170, 170, 170));
+    console.WriteLine("Initializing RNG...", IColor::RGB(170, 170, 170));
     rand_seed = (long int)framebuffer;
-    console.WriteLine("RNG Initialized!", rgb(170, 255, 170));
+    console.WriteLine("RNG Initialized!", IColor::RGB(170, 255, 170));
     //gdt
-    console.WriteLine("Initializing GDT...", rgb(170, 170, 170));
+    console.WriteLine("Initializing GDT...", IColor::RGB(170, 170, 170));
     
-    gdt_init();
-    console.WriteLine("GDT Initialized!", rgb(170, 255, 170));
+    InitializeGDT();
+    console.WriteLine("GDT Initialized!", IColor::RGB(170, 255, 170));
     //idt
     
     
-    console.WriteLine("Initializing IDT...", rgb(170, 170, 170));
-    isr_install();
-    enable_interrupts();
-    set_pit_freq(1000);
-    time_init();
-    console.WriteLine("IDT Initialized!", rgb(170, 255, 170));
+    console.WriteLine("Initializing IDT...", IColor::RGB(170, 170, 170));
+    InitializeISR();
+    EnableInterrupts();
+    SetPITFrequency(1000);
+    InitializeTime();
+    console.WriteLine("IDT Initialized!", IColor::RGB(170, 255, 170));
     //paging
-    console.WriteLine("Initializing Paging...", rgb(170, 170, 170));
-    console.WriteLine("Paging Initialized!", rgb(170, 255, 170));
+    console.WriteLine("Initializing Paging...", IColor::RGB(170, 170, 170));
+    console.WriteLine("Paging Initialized!", IColor::RGB(170, 255, 170));
 
     
     //scheduler
-    console.WriteLine("Initializing Scheduler...", rgb(170, 170, 170));
+    console.WriteLine("Initializing Scheduler...", IColor::RGB(170, 170, 170));
 
-    console.WriteLine("Scheduler Initialized!", rgb(170, 255, 170));
-    console.WriteLine("Initialization Complete!", rgb(170, 255, 170));
-    console.WriteLine(ThreeStrCat("[GuardianOS Version: ", OS_Version_, "]"), rgb(170, 170, 255));
-    graphics.swap();
-    graphics.clear();
+    console.WriteLine("Scheduler Initialized!", IColor::RGB(170, 255, 170));
+    console.WriteLine("Initialization Complete!", IColor::RGB(170, 255, 170));
+    console.WriteLine(ThreeStringConcatenate("[GuardianOS Version: ", OS_Version_, "]"), IColor::RGB(170, 170, 255));
+    graphics.Display();
+    RudamentaryWait(4000);
+    graphics.Clear();
     console.ClearS();
-    console.WriteLine("Welcome to GuardianOS!", rgb(170, 255, 170));
-    //print resolution, use strcat and threecat
-    console.WriteLine(ThreeStrCat(ThreeStrCat("Resolution: ", to_string(display.width), strcat("x", to_string(display.height))), "x", to_string(framebuffer->bpp)), rgb(170, 255, 170));
+    console.WriteLine("Welcome to GuardianOS!", IColor::RGB(170, 255, 170));
+    //print resolution, use StringConcatenate and threecat
+    console.WriteLine(ThreeStringConcatenate(ThreeStringConcatenate("Resolution: ", ToString(display.width), StringConcatenate("x", ToString(display.height))), "x", ToString(framebuffer->bpp)), IColor::RGB(170, 255, 170));
     //print all framebuffers
-    console.WriteLine(strcat("Framebuffer Count: ", to_string(framebuffer_request.response->framebuffer_count)), rgb(170, 255, 170));
+    console.WriteLine(StringConcatenate("Framebuffer Count: ", ToString(framebuffer_request.response->framebuffer_count)), IColor::RGB(170, 255, 170));
     //print memory size in MB
-    console.WriteLine(ThreeStrCat("Memory Size: ", to_string(memsize / 1024 / 1024), " MB"), rgb(170, 255, 170));
+    console.WriteLine(ThreeStringConcatenate("Memory Size: ", ToString(memsize / 1024 / 1024), " MB"), IColor::RGB(170, 255, 170));
     //print in bytes too
-    console.WriteLine(ThreeStrCat("Memory Size: ", to_string(memsize / 1024), " KB"), rgb(170, 255, 170));
-    console.WriteLine(ThreeStrCat("Memory Size: ", to_string(memsize), " B"), rgb(170, 255, 170));
-    pci_init();
+    console.WriteLine(ThreeStringConcatenate("Memory Size: ", ToString(memsize / 1024), " KB"), IColor::RGB(170, 255, 170));
+    console.WriteLine(ThreeStringConcatenate("Memory Size: ", ToString(memsize), " B"), IColor::RGB(170, 255, 170));
+    InitializePCI();
     //capture
-    graphics.swap();
-    graphics.clear();
+    graphics.Display();
+    RudamentaryWait(4000);
+    graphics.Clear();
     console.ClearS();
     console.allow_typing = false;
-    BMPA Cursor;
-    Cursor.data = (long*)cnormal;
+    BMPI Cursor;
+    Cursor.data = (int*)cnormal;
     Cursor.height = CNORMAL_HEIGHT;
     Cursor.width = CNORMAL_WIDTH;
     BMPI BGImg;
@@ -347,65 +349,29 @@ extern "C" void _start() {
     int fps = 0;
     int frames = 0;
     int last = 0;
-    Time_t time;
-    Time_t Cent;
-    time = getTime12Hour(EasternTime);
-    Cent = getTime12Hour(CenteralEurope);
-    BMPI Stretched = *stretch_image(&BGImg, display.width, display.height);
+    char* memesizzze = ToString(memsize);
+    BMPI Stretched = *StretchImage(&BGImg, display.width, display.height);
     while (true)
     {
         
-        graphics.put_image(0, 0, Stretched);
-        switch (Get_Current_Mouse_State())
-        {
-            case MouseState::MOUSE_NONE:
-                console.WriteLine("None", 0xFF0000);
-                break;
-            case MouseState::MOUSE_LEFT:
-                console.WriteLine("Left", 0x00FF00);
-                break;
-            case MouseState::MOUSE_RIGHT:
-                console.WriteLine("Right", 0x0000FF);
-                break;
-            case MouseState::MOUSE_MIDDLE:
-                console.WriteLine("Middle", 0xFFFF00);
-                break;
-            default:
-                console.WriteLine("Unknown", 0xFF00FF);
-                break;
-        }
-        console.WriteLine(strcat("FPS: ", to_string(fps)), 0xFAFAFA);
-        console.WriteLine(strcat(ThreeStrCat(strcat("Eastern: ", to_string(time.hours)), strcat(":", strcat(to_string(time.minutes), strcat(":", to_string(time.seconds)))), " "), ""), rgb(170, 255, 170));
-        console.WriteLine(strcat(ThreeStrCat(strcat("Central: ", to_string(Cent.hours)), strcat(":", strcat(to_string(Cent.minutes), strcat(":", to_string(Cent.seconds)))), " "), ""), rgb(170, 255, 170));
-        graphics.put_image_alpha(get_mouse_x(), get_mouse_y(), Cursor);
-        graphics.swap();
-        console.Clear();
+        graphics.DrawImage(0, 0, Stretched);
+        graphics.DrawString(StringConcatenate("FPS: ", ToString(fps)), 0, 0, 0xFAFAFA);
+        graphics.DrawString(StringConcatenate("Total Used Memory (B): ", ToString(GetTotalUsedMem())), 0, 20, 0xFAFAFA);
+        graphics.DrawString(StringConcatenate("Total Used Memory (KB): ", ToString(GetTotalUsedMem() / 1024)), 0, 40, 0xFAFAFA);
+        graphics.DrawString(StringConcatenate("Total Used Memory (MB): ", ToString(GetTotalUsedMem() / 1024 / 1024)), 0, 60, 0xFAFAFA);
+        graphics.DrawImage(GetMouseXPos(), GetMouseYPos(), Cursor);
+        graphics.Display();
         frames++;
         //use rtc to get time in seconds getSeconds();
-        if (getSeconds() != last)
+        if (TimeGetSeconds() != last)
         {
-            last = getSeconds();
+            last = TimeGetSeconds();
             fps = frames;
             frames = 0;
+            CleanHeap();
         }
-        time = getTime(EasternTime);
-        Cent = getTime(CenteralEurope);
         
     }
-    ///
-    /*Time_t time;
-    time = getTime12Hour();
-    char* dow = strcat("Day of Week: ",(char*)DAYOFWEEK(getDayOfWeek()));
-    char* cd = strcat(strcat("Date: ", to_string(getMonth())), strcat("/", strcat(to_string(getDay()), strcat("/", strcat("20",to_string(getYear()))))));
-    while (true)
-    {
-        console.WriteLine(strcat(ThreeStrCat(strcat("Time: ", to_string(time.hours)), strcat(":", strcat(to_string(time.minutes), strcat(":", to_string(time.seconds)))), " "), (time.pm == 1 ? "PM" : "AM")), rgb(170, 255, 170));
-        console.WriteLine(cd, rgb(170, 255, 170));
-        console.WriteLine(dow, rgb(170, 255, 170));
-        graphics.swap();
-        console.Clear();
-        time = getTime12Hour();
-    }*/
     
 
     halt();

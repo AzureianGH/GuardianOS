@@ -111,7 +111,7 @@ override LDFLAGS += \
 # Internal nasm flags that should not be changed by the user.
 override NASMFLAGS += \
     -Wall \
-    -f elf64
+    -f elf64 \
 
 # Use "find" to glob all *.cpp, *.c, *.S, and *.asm files in the tree and obtain the
 # object and header dependency file names.
