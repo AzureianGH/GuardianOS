@@ -2,6 +2,24 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <libhydrix/hmem/smem/smem.h>
+typedef union __attribute__((aligned(16))) __m128i {
+    int32_t m128i_i32[4];
+    uint64_t m128i_u64[2];
+    __int128 m128i_i128;
+} __m128i;
+inline __m128i _mm_set1_epi32(int32_t i) {
+    __m128i result;
+
+    __asm__ __volatile__ (
+        "movd %1, %%xmm0\n\t"        // Move the 32-bit integer into the lower 32 bits of xmm0
+        "pshufd $0x00, %%xmm0, %0\n\t"  // Shuffle all 4 DWORDs in xmm0 to contain the same value
+        : "=x"(result)
+        : "r"(i)
+        : "xmm0"
+    );
+
+    return result;
+}
 // Graphics class constructor
 Graphics::Graphics() {}
 
@@ -42,13 +60,34 @@ void Graphics::DrawPixel(int x, int y, int color) {
     }
 }
 void Graphics::Clear(int color) {
-    uint32_t *fb_ptr = SwapBuffer;
-    for (uint64_t y = 0; y < Height; ++y) {
-        for (uint64_t x = 0; x < Width; ++x) {
-            fb_ptr[y * (Pitch / (Bpp / 8)) + x] = color;
-        }
+    for (int i = 0; i < Width * Height; ++i) {
+        SwapBuffer[i] = color;
     }
 }
+/*
+void Graphics::Clear(int color) {
+    uint32_t *fb_ptr = SwapBuffer;
+    uint64_t pixel_count = Width * Height;
+    uint64_t i = 0;
+    
+    // Load color into an SSE register (128-bit, for 4 pixels)
+    __m128i color_vector;
+    color_vector = _mm_set1_epi32(color);
+
+    __asm__ __volatile__ (
+        "movdqu %%xmm0, %1\n\t"        // Load color into xmm0
+        "mov %0, %%rdi\n\t"           // Load framebuffer pointer into rdi
+        "mov %2, %%rcx\n\t"           // Load pixel_count into rcx
+        "shr $2, %%rcx\n\t"           // Divide pixel_count by 4 (4 pixels per iteration)
+        "1:\n\t"
+        "movntdq %%xmm0, (%%rdi)\n\t" // Store 4 pixels
+        "add $16, %%rdi\n\t"          // Move to the next block of 4 pixels (16 bytes)
+        "loop 1b\n\t"                 // Loop until all pixels are set
+        : "r"(fb_ptr), "m"(color_vector), "r"(pixel_count)
+        : "xmm0", "rdi", "rcx", "memory"
+    );
+}
+*/
 
 void Graphics::Clear() {
     Clear(0);
@@ -209,25 +248,38 @@ void Graphics::DrawImage(int x, int y, BMPI Bimage) {
 
 int BlendAlpha(int toColor, int fromColor, uint8_t alpha)
 {
-    byte RC = (toColor >> 16) & 0xFF;
-    byte GC = (toColor >> 8) & 0xFF;
-    byte BC = toColor & 0xFF;
-    byte R = (byte)(((RC * alpha) + (RC * (255 - alpha))) >> 8);
-    byte G = (byte)(((GC * alpha) + (GC * (255 - alpha))) >> 8);
-    byte B = (byte)(((BC * alpha) + (BC * (255 - alpha))) >> 8);
+    byte toR = (toColor >> 16) & 0xFF;
+    byte toG = (toColor >> 8) & 0xFF;
+    byte toB = toColor & 0xFF;
+
+    byte fromR = (fromColor >> 16) & 0xFF;
+    byte fromG = (fromColor >> 8) & 0xFF;
+    byte fromB = fromColor & 0xFF;
+
+    byte R = (byte)(((fromR * alpha) + (toR * (255 - alpha))) >> 8);
+    byte G = (byte)(((fromG * alpha) + (toG * (255 - alpha))) >> 8);
+    byte B = (byte)(((fromB * alpha) + (toB * (255 - alpha))) >> 8);
+
     return (R << 16) | (G << 8) | B;
 }
 
+
 void Graphics::DrawAlphaPixel(int x, int y, uint32_t Color) {
-    if (x >= Width && y >= Height) {
-        return;
+    //put pixel with transparency
+    if (x < Width && y < Height) {
+        int alpha = (Color >> 24) & 0xFF;
+        if (alpha == 0) return;
+        if (alpha == 255) {
+            DrawPixelInline(x, y, Color);
+            return;
+        }
+        int fb_color = GetPixelFromScreen(x, y);
+        int r = ((Color >> 16) & 0xFF) * alpha / 255 + ((fb_color >> 16) & 0xFF) * (255 - alpha) / 255;
+        int g = ((Color >> 8) & 0xFF) * alpha / 255 + ((fb_color >> 8) & 0xFF) * (255 - alpha) / 255;
+        int b = (Color & 0xFF) * alpha / 255 + (fb_color & 0xFF) * (255 - alpha) / 255;
+        DrawPixelInline(x, y, (r << 16) | (g << 8) | b);
     }
-    uint32_t *fb_ptr = SwapBuffer;
-    
-    int toColor = GetPixelFromScreen(x, y);
-    int alpha = (Color >> 24) & 0xFF;
-    int newColor = BlendAlpha(toColor, Color, alpha);
-    fb_ptr[y * (Pitch / (Bpp / 8)) + x] = newColor;
+
 }
 
 
@@ -283,4 +335,17 @@ void Graphics::LoadFont(long *font, int glyph_width, int glyph_height, int font_
 
 inline void get_pixel_from_bitmap(long *bmpdata, int x, int y, int width, int height, int *color) {
     *color = bmpdata[y * width + x];
+}
+
+int* Graphics::ClipFromScreen(int x, int y, int w, int h)
+{
+    int* clipped = (int*)KernelAllocate(w * h * 4);
+    for (int i = 0; i < h; i++)
+    {
+        for (int j = 0; j < w; j++)
+        {
+            clipped[i * w + j] = GetPixelFromScreen(x + j, y + i);
+        }
+    }
+    return clipped;
 }

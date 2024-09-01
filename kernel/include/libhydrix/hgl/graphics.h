@@ -157,4 +157,5 @@ class Graphics {
         /// @param font_char_width The width of a font character (How close the characters are to each other)
         /// @param font_sheet_width The width of the font sheet (Example: 256 for a 16x16 font sheet)
         void LoadFont(long* font, int glyph_width, int glyph_height, int font_char_width, int font_sheet_width);
+        int* ClipFromScreen(int x, int y, int w, int h);
 };

@@ -71,6 +71,11 @@ override SHARED_FLAGS := \
     -Wno-sign-compare \
     -Wno-unused-parameter \
     -Wno-unused-but-set-variable \
+    -Wno-error=int-to-pointer-cast \
+    -Wno-int-to-pointer-cast \
+    -Wno-error=array-bounds= \
+    -fno-permissive \
+    -fno-rtti \
     -O2 \
     -Werror \
     -Wall \

@@ -113,3 +113,8 @@ typedef uint8_t byte;
 
 BMPI Stretch_BMPI(BMPI bmp, int width, int height);
 BMPA Stretch_BMPA(BMPA bmp, int width, int height);
+
+//word, dword, qword
+typedef uint16_t word;
+typedef uint32_t dword;
+typedef uint64_t qword;

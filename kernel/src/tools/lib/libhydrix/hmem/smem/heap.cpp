@@ -60,6 +60,28 @@ void KernelFree(void* ptr) {
     TotalUsedMem -= block->size;
 }
 
+//get freelist count
+int GetFreeListCount() {
+    mem_block_t* curr = free_list;
+    int count = 0;
+    while (curr) {
+        count++;
+        curr = curr->next;
+    }
+    return count;
+}
+
+//get usedlist count
+int GetUsedListCount() {
+    mem_block_t* curr = (mem_block_t*)mem_heap_base;
+    int count = 0;
+    while (curr < (mem_block_t*)mem_heap_end) {
+        count++;
+        curr = (mem_block_t*)((uint64_t*)curr + curr->size + sizeof(mem_block_t));
+    }
+    return count;
+}
+
 void* KernelReallocate(void* ptr, uint64_t bytes) {
     if (!ptr) {
         return KernelAllocate(bytes);

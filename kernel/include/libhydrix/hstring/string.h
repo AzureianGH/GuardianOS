@@ -5,7 +5,8 @@
 #include <stdarg.h>
 
 
-
+typedef char* string;
+typedef const char* cstring;
 /// @brief String length
 /// @param str The string
 /// @return The length

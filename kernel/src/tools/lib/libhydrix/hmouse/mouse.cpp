@@ -165,6 +165,7 @@ int32_t GetMouseYPos()
 
 void MouseHandler(registers_t *r)
 {
+
     static int8_t x = 0;
     static int8_t y = 0;
     switch (mouse_cycle)

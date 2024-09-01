@@ -131,7 +131,7 @@ void RudamentaryWait(uint64_t wait)
     }
 }
 #define __KERNEL__BEFORE__START__TIME 4000
-char* ThreeStringConcatenate(string one, string two, string three)
+char* ThreeStringConcatenate(char* one, char* two, char* three)
 {
     return StringConcatenate(one, StringConcatenate(two, three));
 }
@@ -226,11 +226,11 @@ void beep(uint64_t freq, uint64_t msec)
     PITSleepMS(msec);
     stop();
 }
-
 extern void kernel_main() {
     
     
-    
+    int InitFailuresIndex = 0;
+    bool InitalizedFailure = false;
     // Ensure the bootloader actually understands our base revision (see spec).
     if (LIMINE_BASE_REVISION_SUPPORTED == false) {
         hcf();
@@ -261,6 +261,7 @@ extern void kernel_main() {
     //one after the framebuffer
     //heap_init the offset of hhdm
     InitializeHeap(offsetofhhdm);
+    string* InitFailures = new string[100];
     graphics.Init((uint32_t*)framebuffer->address, framebuffer->width, framebuffer->height, framebuffer->pitch, framebuffer->bpp, framebuffer->red_mask_shift, framebuffer->green_mask_shift, framebuffer->blue_mask_shift, framebuffer->red_mask_size, framebuffer->green_mask_size, framebuffer->blue_mask_size);
     
     
@@ -280,6 +281,7 @@ extern void kernel_main() {
     SetMouseConsole(&console);
     InitializeSyscall(&console);
     SetPCIConsole(&console);
+    SetAPCIConsole(&console);
     console.WriteLine("Initializing FPU...", IColor::RGB(170, 170, 170));
     if (FPU::IsFPUEnabled())
     {
@@ -288,6 +290,10 @@ extern void kernel_main() {
     else
     {
         console.WriteLine("FPU Not Detected!", IColor::RGB(255, 170, 170));
+        console.WriteLine("FPU Failed To Initialize!", IColor::RGB(255, 120, 120));
+        InitalizedFailure = true;
+        InitFailures[InitFailuresIndex] = "FPU";
+        InitFailuresIndex++;
     }
     console.WriteLine("Initializing RNG...", IColor::RGB(170, 170, 170));
     rand_seed = (long int)framebuffer;
@@ -307,18 +313,43 @@ extern void kernel_main() {
     InitializeTime();
     console.WriteLine("IDT Initialized!", IColor::RGB(170, 255, 170));
     //paging
-    console.WriteLine("Initializing Paging...", IColor::RGB(170, 170, 170));
-    console.WriteLine("Paging Initialized!", IColor::RGB(170, 255, 170));
-
+    console.WriteLine("Initializing ACPI...", IColor::RGB(170, 170, 170));
     
-    //scheduler
-    console.WriteLine("Initializing Scheduler...", IColor::RGB(170, 170, 170));
-
-    console.WriteLine("Scheduler Initialized!", IColor::RGB(170, 255, 170));
+    if (acpiEnable() == -1)
+    {
+        console.WriteLine("ACPI Not Detected!", IColor::RGB(255, 170, 170));
+        string reason = GetReasonForFailureACPI();
+        console.WriteLine(StringConcatenate("Reason: ", reason), IColor::RGB(255, 170, 170));
+        console.WriteLine("ACPI Failed To Initialized!", IColor::RGB(255, 120, 120));
+        InitalizedFailure = true;
+        InitFailures[InitFailuresIndex] = "ACPI";
+        InitFailuresIndex++;
+        initAcpi();
+    }
+    else
+    {
+        console.WriteLine("ACPI Detected!", IColor::RGB(170, 255, 170));
+        console.WriteLine("ACPI Initialized!", IColor::RGB(170, 255, 170));
+        
+    }
+    
+    if (InitalizedFailure)
+    {
+        
+        for (int i = 0; i < InitFailuresIndex; i++)
+        {
+            console.WriteLine(StringConcatenate("Failed To Initialize: ", InitFailures[i]), IColor::RGB(255, 170, 170));
+        }
+        console.WriteLine(ThreeStringConcatenate("FAILURE GUARDIANOS VERSION: ", OS_Version_, ""), IColor::RGB(255, 170, 170));
+        console.WriteLine("Initialization Failed!", IColor::RGB(255, 100, 100));
+        graphics.DrawString("SYSTEM HALTED", (graphics.Width / 2) - 210, graphics.Height - 100, 4, 0xFF0000);
+        graphics.Display();
+        hcf();
+    }
     console.WriteLine("Initialization Complete!", IColor::RGB(170, 255, 170));
     console.WriteLine(ThreeStringConcatenate("[GuardianOS Version: ", OS_Version_, "]"), IColor::RGB(170, 170, 255));
     graphics.Display();
-    RudamentaryWait(4000);
+    RudamentaryWait(80000);
     graphics.Clear();
     console.ClearS();
     console.WriteLine("Welcome to GuardianOS!", IColor::RGB(170, 255, 170));
@@ -338,8 +369,8 @@ extern void kernel_main() {
     graphics.Clear();
     console.ClearS();
     console.allow_typing = false;
-    BMPI Cursor;
-    Cursor.data = (int*)cnormal;
+    BMPA Cursor;
+    Cursor.data = (long*)cnormal;
     Cursor.height = CNORMAL_HEIGHT;
     Cursor.width = CNORMAL_WIDTH;
     BMPI BGImg;
@@ -351,26 +382,26 @@ extern void kernel_main() {
     int last = 0;
     char* memesizzze = ToString(memsize);
     BMPI Stretched = *StretchImage(&BGImg, display.width, display.height);
+    Point MouseDragStart = { 0, 0 };
+    bool MouseDrag = false;
+    /// #########
+    /// # START #
+    /// #########
     while (true)
     {
-        
-        graphics.DrawImage(0, 0, Stretched);
-        graphics.DrawString(StringConcatenate("FPS: ", ToString(fps)), 0, 0, 0xFAFAFA);
-        graphics.DrawString(StringConcatenate("Total Used Memory (B): ", ToString(GetTotalUsedMem())), 0, 20, 0xFAFAFA);
-        graphics.DrawString(StringConcatenate("Total Used Memory (KB): ", ToString(GetTotalUsedMem() / 1024)), 0, 40, 0xFAFAFA);
-        graphics.DrawString(StringConcatenate("Total Used Memory (MB): ", ToString(GetTotalUsedMem() / 1024 / 1024)), 0, 60, 0xFAFAFA);
-        graphics.DrawImage(GetMouseXPos(), GetMouseYPos(), Cursor);
+        graphics.Clear(0x000000);
+        graphics.DrawString(ToString(fps), 0, 0, 0xFAFAFA);
+        graphics.DrawAlphaImage(GetMouseXPos(), GetMouseYPos(), Cursor);
         graphics.Display();
         frames++;
+        
         //use rtc to get time in seconds getSeconds();
         if (TimeGetSeconds() != last)
         {
             last = TimeGetSeconds();
             fps = frames;
             frames = 0;
-            CleanHeap();
         }
-        
     }
     
 
