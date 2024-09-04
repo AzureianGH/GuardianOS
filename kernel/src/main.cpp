@@ -1,9 +1,11 @@
+// DEBUG
+#define SKIP_BOOT_FAILURE
+
 #include <stdint.h>
 #include <stddef.h>
 #include <limine.h>
 #include <libhydrix/libhydrix.h>
 #include <basic.h>
-
 #define __asm__ __asm
 namespace {
 
@@ -304,8 +306,6 @@ extern void kernel_main() {
     InitializeGDT();
     console.WriteLine("GDT Initialized!", IColor::RGB(170, 255, 170));
     //idt
-    
-    
     console.WriteLine("Initializing IDT...", IColor::RGB(170, 170, 170));
     InitializeISR();
     EnableInterrupts();
@@ -317,6 +317,7 @@ extern void kernel_main() {
     
     if (acpiEnable() == -1)
     {
+        
         console.WriteLine("ACPI Not Detected!", IColor::RGB(255, 170, 170));
         string reason = GetReasonForFailureACPI();
         console.WriteLine(StringConcatenate("Reason: ", reason), IColor::RGB(255, 170, 170));
@@ -324,32 +325,33 @@ extern void kernel_main() {
         InitalizedFailure = true;
         InitFailures[InitFailuresIndex] = "ACPI";
         InitFailuresIndex++;
-        initAcpi();
+        
     }
     else
     {
         console.WriteLine("ACPI Detected!", IColor::RGB(170, 255, 170));
         console.WriteLine("ACPI Initialized!", IColor::RGB(170, 255, 170));
-        
+        initAcpi();
     }
-    
-    if (InitalizedFailure)
-    {
-        
-        for (int i = 0; i < InitFailuresIndex; i++)
+    #ifndef SKIP_BOOT_FAILURE
+        if (InitalizedFailure)
         {
-            console.WriteLine(StringConcatenate("Failed To Initialize: ", InitFailures[i]), IColor::RGB(255, 170, 170));
+            
+            for (int i = 0; i < InitFailuresIndex; i++)
+            {
+                console.WriteLine(StringConcatenate("Failed To Initialize: ", InitFailures[i]), IColor::RGB(255, 170, 170));
+            }
+            console.WriteLine(ThreeStringConcatenate("FAILURE GUARDIANOS VERSION: ", OS_Version_, ""), IColor::RGB(255, 170, 170));
+            console.WriteLine("Initialization Failed!", IColor::RGB(255, 100, 100));
+            graphics.DrawString("SYSTEM HALTED", (graphics.Width / 2) - 210, graphics.Height - 100, 4, 0xFF0000);
+            graphics.Display();
+            hcf();
         }
-        console.WriteLine(ThreeStringConcatenate("FAILURE GUARDIANOS VERSION: ", OS_Version_, ""), IColor::RGB(255, 170, 170));
-        console.WriteLine("Initialization Failed!", IColor::RGB(255, 100, 100));
-        graphics.DrawString("SYSTEM HALTED", (graphics.Width / 2) - 210, graphics.Height - 100, 4, 0xFF0000);
-        graphics.Display();
-        hcf();
-    }
+    #endif
     console.WriteLine("Initialization Complete!", IColor::RGB(170, 255, 170));
     console.WriteLine(ThreeStringConcatenate("[GuardianOS Version: ", OS_Version_, "]"), IColor::RGB(170, 170, 255));
     graphics.Display();
-    RudamentaryWait(80000);
+    RudamentaryWait(4000);
     graphics.Clear();
     console.ClearS();
     console.WriteLine("Welcome to GuardianOS!", IColor::RGB(170, 255, 170));
