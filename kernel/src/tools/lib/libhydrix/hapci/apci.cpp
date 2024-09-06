@@ -38,7 +38,7 @@ struct FACP
     byte PM1_CNT_LEN;
 };
 
-void SetAPCIConsole(Console* console_)
+void SetACPIConsole(Console* console_)
 {
     consoleacpi = console_;
 }

@@ -6,7 +6,7 @@
 #include <libhydrix/hmem/smem/smem.h>
 #include <libhydrix/hcon/console.h>
 #include <libhydrix/hlow/pit/pit.h>
-void SetAPCIConsole(Console* console_);
+void SetACPIConsole(Console* console_);
 int acpiEnable(void);
 int initAcpi(void);
 string GetReasonForFailureACPI();

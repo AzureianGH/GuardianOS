@@ -74,6 +74,7 @@ override SHARED_FLAGS := \
     -Wno-error=int-to-pointer-cast \
     -Wno-int-to-pointer-cast \
     -Wno-error=array-bounds= \
+    -Wno-unused-function \
     -fno-permissive \
     -fno-rtti \
     -O2 \

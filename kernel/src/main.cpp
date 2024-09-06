@@ -1,6 +1,6 @@
 // DEBUG
 #define SKIP_BOOT_FAILURE
-
+#define SKIP_BOOT_WAIT
 #include <stdint.h>
 #include <stddef.h>
 #include <limine.h>
@@ -228,6 +228,50 @@ void beep(uint64_t freq, uint64_t msec)
     PITSleepMS(msec);
     stop();
 }
+void PrintAvailableResolutions(limine_framebuffer* framebuffer)
+{
+    uint64_t Count = framebuffer->mode_count;
+    limine_video_mode** modes = framebuffer->modes;
+    for (uint64_t i = 0; i < Count; i++)
+    {
+        limine_video_mode* mode = modes[i];
+        console.WriteLine(ThreeStringConcatenate(StringConcatenate(ThreeStringConcatenate("Resolution: ", ToString(mode->width), "x"), ToString(mode->height)), "x", ToString(mode->bpp)), IColor::RGB(170, 255, 170));
+        
+    }
+}
+void DrawMouseToolTip(Graphics* GraphicsObject, int x, int y, cstring text)
+{
+    int FontGlyphWidth = GraphicsObject->GlyphWidth / 2; // 8
+    int textwidth = FontGlyphWidth * StringLength(text); // 8 * length of text 
+    graphics.DrawFilledRectangle(x + 16, y + 16, textwidth + 10, 20, 0x000000);
+    graphics.DrawRectangle(x + 16, y + 16, textwidth + 10, 20, 0xFFFFFF);
+    graphics.DrawString((string)text, x + 19, y + 19, 0xFFFFFF);
+}
+void DrawAmericanFlag(int x, int y)
+{
+    //draw white bg
+    graphics.DrawFilledRectangle(x, y, 200, 100, 0xFFFFFF);
+    //draw red stripes
+    for (int i = 0; i < 7; i++)
+    {
+        graphics.DrawFilledRectangle(x, y + (i * 10), 200, 10, 0xFF0000);
+    }
+    //draw blue bg
+    graphics.DrawFilledRectangle(x, y, 50, 70, 0x0000FF);
+    //draw stars
+    for (int i = 0; i < 9; i++)
+    {
+        for (int j = 0; j < 6; j++)
+        {
+            graphics.DrawFilledRectangle(x + (j * 10), y + (i * 10), 10, 10, 0xFFFFFF);
+        }
+    }
+    //check if mouse is over the flag
+    if (GetMouseXPos() > x && GetMouseXPos() < x + 200 && GetMouseYPos() > y && GetMouseYPos() < y + 100)
+    {
+        DrawMouseToolTip(&graphics, GetMouseXPos(), GetMouseYPos(), "American Flag");
+    }
+}
 extern void kernel_main() {
     
     
@@ -283,7 +327,7 @@ extern void kernel_main() {
     SetMouseConsole(&console);
     InitializeSyscall(&console);
     SetPCIConsole(&console);
-    SetAPCIConsole(&console);
+    SetACPIConsole(&console);
     console.WriteLine("Initializing FPU...", IColor::RGB(170, 170, 170));
     if (FPU::IsFPUEnabled())
     {
@@ -351,7 +395,10 @@ extern void kernel_main() {
     console.WriteLine("Initialization Complete!", IColor::RGB(170, 255, 170));
     console.WriteLine(ThreeStringConcatenate("[GuardianOS Version: ", OS_Version_, "]"), IColor::RGB(170, 170, 255));
     graphics.Display();
-    RudamentaryWait(4000);
+    #ifndef SKIP_BOOT_WAIT
+        RudamentaryWait(4000);
+    #endif
+
     graphics.Clear();
     console.ClearS();
     console.WriteLine("Welcome to GuardianOS!", IColor::RGB(170, 255, 170));
@@ -361,13 +408,13 @@ extern void kernel_main() {
     console.WriteLine(StringConcatenate("Framebuffer Count: ", ToString(framebuffer_request.response->framebuffer_count)), IColor::RGB(170, 255, 170));
     //print memory size in MB
     console.WriteLine(ThreeStringConcatenate("Memory Size: ", ToString(memsize / 1024 / 1024), " MB"), IColor::RGB(170, 255, 170));
-    //print in bytes too
-    console.WriteLine(ThreeStringConcatenate("Memory Size: ", ToString(memsize / 1024), " KB"), IColor::RGB(170, 255, 170));
-    console.WriteLine(ThreeStringConcatenate("Memory Size: ", ToString(memsize), " B"), IColor::RGB(170, 255, 170));
     InitializePCI();
+    PrintAvailableResolutions(framebuffer);
     //capture
     graphics.Display();
-    RudamentaryWait(4000);
+    #ifndef SKIP_BOOT_WAIT
+        RudamentaryWait(4000);
+    #endif
     graphics.Clear();
     console.ClearS();
     console.allow_typing = false;
@@ -389,14 +436,21 @@ extern void kernel_main() {
     /// #########
     /// # START #
     /// #########
+    bool sse = CPUSupport::CPUSupportCheckFor(CPUSupport::CPUFeature::SSE);
+    bool SSEINFO = false;
     while (true)
     {
-        graphics.Clear(0x000000);
+        graphics.Clear(0);
         graphics.DrawString(ToString(fps), 0, 0, 0xFAFAFA);
+        DrawAmericanFlag(200,200);
         graphics.DrawAlphaImage(GetMouseXPos(), GetMouseYPos(), Cursor);
+        //check if hovering over the fps
+        if (GetMouseXPos() < 20 && GetMouseYPos() < 20)
+        {
+            DrawMouseToolTip(&graphics, GetMouseXPos(), GetMouseYPos(), ThreeStringConcatenate("Frames Rendered Per Second (", ToString(fps), ")"));
+        }
         graphics.Display();
         frames++;
-        
         //use rtc to get time in seconds getSeconds();
         if (TimeGetSeconds() != last)
         {

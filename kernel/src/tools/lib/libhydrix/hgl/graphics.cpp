@@ -270,7 +270,8 @@ void Graphics::DrawAlphaPixel(int x, int y, uint32_t Color) {
         int alpha = (Color >> 24) & 0xFF;
         if (alpha == 0) return;
         if (alpha == 255) {
-            DrawPixelInline(x, y, Color);
+            //remove alpha
+            DrawPixelInline(x, y, Color & 0x00FFFFFF);
             return;
         }
         int fb_color = GetPixelFromScreen(x, y);

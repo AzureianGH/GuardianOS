@@ -69,7 +69,7 @@ void pci_probe()
                     uint16_t vendor = getVendorID(bus, slot, function);
                     if(vendor == 0xffff) continue;
                     uint16_t device = getDeviceID(bus, slot, function);
-                    con_pci->WriteLineS(StringConcatenate(StringConcatenate("vendor: 0x", ToHexNumberString(vendor)),StringConcatenate(" device: 0x", ToHexNumberString(device))));
+                    //con_pci->WriteLineS(StringConcatenate(StringConcatenate("vendor: 0x", ToHexNumberString(vendor)),StringConcatenate(" device: 0x", ToHexNumberString(device))));
                     pci_device *pdev = (pci_device *)KernelAllocate(sizeof(pci_device));
                     pdev->vendor = vendor;
                     pdev->device = device;

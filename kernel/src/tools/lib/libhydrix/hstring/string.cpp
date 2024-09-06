@@ -131,15 +131,16 @@ char* sizet_to_string(size_t value) {
     return &buffer[i+1];
 }
 char* float_to_string(float value) {
+    //Get float no trailing zeros
     static char buffer[64] = {0};
     int int_part = (int)value;
     float frac_part = value - (float)int_part;
     if (frac_part < 0) frac_part = -frac_part;
-    
+
     int i = int_to_string(int_part, buffer);
-    
+
     buffer[i++] = '.';
-    
+
     // Convert fractional part to string
     for (int j = 0; j < 6; j++) { // Adjust precision as needed
         frac_part *= 10;
@@ -147,7 +148,7 @@ char* float_to_string(float value) {
         buffer[i++] = frac_int + '0';
         frac_part -= frac_int;
     }
-    
+
     buffer[i] = '\0';
     return buffer;
 }

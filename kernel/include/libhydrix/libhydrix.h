@@ -34,3 +34,4 @@
 #include <libhydrix/hlow/pci/pci.h>
 #include <libhydrix/hgl/image.h>
 #include <libhydrix/hapci/acpi.h>
+#include <libhydrix/hlow/cpu/cpuchecks.h>
