@@ -75,8 +75,8 @@ void Taskbar::Draw()
     int mx = GetMouseXPos();
     int my = GetMouseYPos();
     // Draw background and borders
-    GraphicsObjectTask->DrawFilledRectangle(0, 0, GraphicsObjectTask->Width, 40, TBCOLOR);
-    GraphicsObjectTask->DrawRectangle(0, 0, GraphicsObjectTask->Width, 40, TBBOCOLOR);
+    GraphicsObjectTask->DrawFilledRectangle(0, 0, GraphicsObjectTask->Width - 1, 40, TBCOLOR);
+    GraphicsObjectTask->DrawRectangle(0, 0, GraphicsObjectTask->Width - 1, 40, TBBOCOLOR);
 
     // Set the base position for the text
     int baseX1 = GraphicsObjectTask->Width - 90; // Position from the right edge

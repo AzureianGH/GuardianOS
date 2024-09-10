@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <libhydrix/hmem/smem/smem.h>
+
 typedef union __attribute__((aligned(16))) __m128i {
     int32_t m128i_i32[4];
     uint64_t m128i_u64[2];
@@ -354,5 +355,16 @@ void Graphics::ClipFromScreen(int x, int y, BMPI *Bimage)
         {
             Bimage->data[i * Bimage->width + j] = GetPixelFromScreen(x + j, y + i);
         }
+    }
+}
+void Graphics::DrawBézierCurve(int x0, int y0, int x1, int y1, int x2, int y2, int color)
+{
+    float x = 0;
+    float y = 0;
+    for (float t = 0; t <= 1; t += 0.001)
+    {
+        x = (1 - t) * (1 - t) * x0 + 2 * (1 - t) * t * x1 + t * t * x2;
+        y = (1 - t) * (1 - t) * y0 + 2 * (1 - t) * t * y1 + t * t * y2;
+        DrawPixelInline(x, y, color);
     }
 }

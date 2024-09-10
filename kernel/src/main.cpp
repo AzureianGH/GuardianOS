@@ -433,6 +433,8 @@ extern void kernel_main() {
     while (true)
     {
         graphics.Clear(0);
+        //draw curve in the middle
+        graphics.DrawBézierCurve(0, 10, 20, 30, 40, 50, 0xFFFFFF);
         taskbar.Draw();
         DrawCursor();
         graphics.Display();

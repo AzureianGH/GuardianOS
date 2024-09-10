@@ -177,5 +177,18 @@ class Graphics {
         /// @param h The height
         /// @return The screenshot
         int* ClipFromScreen(int x, int y, int w, int h);
+        /// @brief Screenshots part of the screen
+        /// @param x The horizontal position
+        /// @param y The vertical position
+        /// @param Bimage The bitmap image
         void ClipFromScreen(int x, int y, BMPI* Bimage);
+        /// @brief Draw a Bézier curve
+        /// @param x0 The horizontal position of the first point
+        /// @param y0 The vertical position of the first point
+        /// @param x1 The horizontal position of the second point
+        /// @param y1 The vertical position of the second point
+        /// @param x2 The horizontal position of the third point
+        /// @param y2 The vertical position of the third point
+        /// @param color The color
+        void DrawBézierCurve(int x0, int y0, int x1, int y1, int x2, int y2, int color);
 };
