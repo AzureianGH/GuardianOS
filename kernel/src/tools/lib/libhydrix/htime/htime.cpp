@@ -174,7 +174,7 @@ Time_t TimeGetTime()
 	// Add timezone offset
 	time.Hours += CurrentSelectedTimezone;
 
-	// If the timezone is India (Mumbai), add 30 Minimumutes
+	// If the timezone is India (Mumbai), add 30 Minutes
 	if (CurrentSelectedTimezone == Mumbai)
 	{
 		time.Minutes += 30;

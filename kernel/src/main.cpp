@@ -6,6 +6,7 @@
 #include <limine.h>
 #include <libhydrix/libhydrix.h>
 #include <basic.h>
+#include <Taskbar/Taskbar.h>
 #define __asm__ __asm
 namespace {
 
@@ -239,38 +240,32 @@ void PrintAvailableResolutions(limine_framebuffer* framebuffer)
         
     }
 }
-void DrawMouseToolTip(Graphics* GraphicsObject, int x, int y, cstring text)
+
+void DrawCursor()
 {
-    int FontGlyphWidth = GraphicsObject->GlyphWidth / 2; // 8
-    int textwidth = FontGlyphWidth * StringLength(text); // 8 * length of text 
-    graphics.DrawFilledRectangle(x + 16, y + 16, textwidth + 10, 20, 0x000000);
-    graphics.DrawRectangle(x + 16, y + 16, textwidth + 10, 20, 0xFFFFFF);
-    graphics.DrawString((string)text, x + 19, y + 19, 0xFFFFFF);
-}
-void DrawAmericanFlag(int x, int y)
-{
-    //draw white bg
-    graphics.DrawFilledRectangle(x, y, 200, 100, 0xFFFFFF);
-    //draw red stripes
-    for (int i = 0; i < 7; i++)
-    {
-        graphics.DrawFilledRectangle(x, y + (i * 10), 200, 10, 0xFF0000);
-    }
-    //draw blue bg
-    graphics.DrawFilledRectangle(x, y, 50, 70, 0x0000FF);
-    //draw stars
-    for (int i = 0; i < 9; i++)
-    {
-        for (int j = 0; j < 6; j++)
-        {
-            graphics.DrawFilledRectangle(x + (j * 10), y + (i * 10), 10, 10, 0xFFFFFF);
-        }
-    }
-    //check if mouse is over the flag
-    if (GetMouseXPos() > x && GetMouseXPos() < x + 200 && GetMouseYPos() > y && GetMouseYPos() < y + 100)
-    {
-        DrawMouseToolTip(&graphics, GetMouseXPos(), GetMouseYPos(), "American Flag");
-    }
+    uint64_t mx = GetMouseXPos();
+    uint64_t my = GetMouseYPos();
+    //Border
+    graphics.DrawLine(mx, my, mx, my + 15, 0xFFFFFF);
+    graphics.DrawLine(mx, my, mx + 10, my + 10, 0xFFFFFF);
+    graphics.DrawLine(mx + 10, my + 10, mx + 6, my + 10, 0xFFFFFF);
+    graphics.DrawLine(mx + 6, my + 10, mx + 6, my + 12, 0xFFFFFF);
+    graphics.DrawLine(mx + 7, my + 13, mx + 7, my + 15, 0xFFFFFF);
+    graphics.DrawLine(mx + 7, my + 15, mx + 5, my + 15, 0xFFFFFF);
+    graphics.DrawLine(mx + 5, my + 15, mx + 5, my + 14, 0xFFFFFF);
+    graphics.DrawLine(mx + 4, my + 14, mx + 4, my + 13, 0xFFFFFF);
+    graphics.DrawLine(mx + 3, my + 12, mx, my + 15, 0xFFFFFF);
+    //Insides
+    graphics.DrawLine(mx + 1, my + 2, mx + 1, my + 13, 0x0f141c);
+    graphics.DrawLine(mx + 2, my + 3, mx + 2, my + 12, 0x0f141c);
+    graphics.DrawLine(mx + 3, my + 4, mx + 3, my + 11, 0x0f141c);
+    graphics.DrawLine(mx + 4, my + 5, mx + 4, my + 12, 0x0f141c);
+    graphics.DrawLine(mx + 5, my + 6, mx + 5, my + 13, 0x0f141c);
+    graphics.DrawLine(mx + 6, my + 7, mx + 6, my + 9, 0x0f141c);
+    graphics.DrawPixel(mx + 7, my + 8, 0x0f141c);
+    graphics.DrawPixel(mx + 7, my + 9, 0x0f141c);
+    graphics.DrawPixel(mx + 8, my + 9, 0x0f141c);
+    graphics.DrawLine(mx + 6, my + 13, mx + 6, my + 14, 0x0f141c);
 }
 extern void kernel_main() {
     
@@ -426,9 +421,7 @@ extern void kernel_main() {
     BGImg.data = (int*)OSBG;
     BGImg.height = OSBG_HEIGHT;
     BGImg.width = OSBG_WIDTH;
-    int fps = 0;
-    int frames = 0;
-    int last = 0;
+    
     char* memesizzze = ToString(memsize);
     BMPI Stretched = *StretchImage(&BGImg, display.width, display.height);
     Point MouseDragStart = { 0, 0 };
@@ -436,28 +429,13 @@ extern void kernel_main() {
     /// #########
     /// # START #
     /// #########
-    bool sse = CPUSupport::CPUSupportCheckFor(CPUSupport::CPUFeature::SSE);
-    bool SSEINFO = false;
+    Taskbar taskbar(&graphics);
     while (true)
     {
-        graphics.Clear(0);
-        graphics.DrawString(ToString(fps), 0, 0, 0xFAFAFA);
-        DrawAmericanFlag(200,200);
-        graphics.DrawAlphaImage(GetMouseXPos(), GetMouseYPos(), Cursor);
-        //check if hovering over the fps
-        if (GetMouseXPos() < 20 && GetMouseYPos() < 20)
-        {
-            DrawMouseToolTip(&graphics, GetMouseXPos(), GetMouseYPos(), ThreeStringConcatenate("Frames Rendered Per Second (", ToString(fps), ")"));
-        }
+        taskbar.Draw();
+        DrawCursor();
         graphics.Display();
-        frames++;
-        //use rtc to get time in seconds getSeconds();
-        if (TimeGetSeconds() != last)
-        {
-            last = TimeGetSeconds();
-            fps = frames;
-            frames = 0;
-        }
+        
     }
     
 

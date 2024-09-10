@@ -40,7 +40,15 @@ bool StringCompare(cstring str1, cstring str2) {
     }
     return true;
 }
-
+void StringCopy(char* dest, const char* src)
+{
+    int i = 0;
+    while (src[i] != '\0') {
+        dest[i] = src[i];
+        i++;
+    }
+    dest[i] = '\0';
+}
 void ReverseString(char *str, int len) {
     int start = 0;
     int end = len - 1;
@@ -275,6 +283,10 @@ char* ToString(uint64_t value) {
     return u64_to_string(value);
 }
 char* ToString(float value) {
+    //check if nan, if so, return NaN
+    if (value != value) {
+        return "NaN";
+    }
     if (value == 0.0f) {
         return "0.0";
     }
@@ -304,3 +316,4 @@ char* ToHexNumberString(uint64_t value) {
 char ToCharacter(int value) {
     return int_to_char(value);
 }
+

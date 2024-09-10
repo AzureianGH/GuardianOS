@@ -60,6 +60,12 @@ class Graphics {
         /// @param y The vertical position
         /// @param color The color
         void DrawString(char* str, int x, int y, int color);
+        /// @brief Draw a string on the screen
+        /// @param str The string
+        /// @param x The horizontal position
+        /// @param y The vertical position
+        /// @param color The color
+        void DrawString(StringObj str, int x, int y, int color);
         /// @brief Draw a string on the screen with scaling
         /// @param str The string
         /// @param x The horizontal position
@@ -67,6 +73,13 @@ class Graphics {
         /// @param scaling The scaling (1 is normal)
         /// @param color The color
         void DrawString(char *str, int x, int y, uint8_t scaling, int color);
+        /// @brief Draw a string on the screen with scaling
+        /// @param str The string
+        /// @param x The horizontal position
+        /// @param y The vertical position
+        /// @param scaling The scaling (1 is normal)
+        /// @param color The color
+        void DrawString(StringObj str, int x, int y, uint8_t scaling, int color);
         /// @brief Draw a char on the screen
         /// @param c The char
         /// @param x The horizontal position
@@ -157,5 +170,12 @@ class Graphics {
         /// @param font_char_width The width of a font character (How close the characters are to each other)
         /// @param font_sheet_width The width of the font sheet (Example: 256 for a 16x16 font sheet)
         void LoadFont(long* font, int glyph_width, int glyph_height, int font_char_width, int font_sheet_width);
+        /// @brief Screenshots part of the screen
+        /// @param x The horizontal position
+        /// @param y The vertical position
+        /// @param w The width
+        /// @param h The height
+        /// @return The screenshot
         int* ClipFromScreen(int x, int y, int w, int h);
+        void ClipFromScreen(int x, int y, BMPI* Bimage);
 };

@@ -49,45 +49,23 @@ void Graphics::Init(uint32_t* fb, uint64_t width, uint64_t height, uint64_t Pitc
 }
 
 inline void Graphics::DrawPixelInline(int x, int y, int color) {
-    if (x >= Width && y >= Height) {
+    if (x >= Width || y >= Height || x < 0 || y < 0) {
         return;
     }
     SwapBuffer[y * (Pitch / (Bpp / 8)) + x] = color;
 }
+
 void Graphics::DrawPixel(int x, int y, int color) {
-    if (x < Width && y < Height) {
-        SwapBuffer[y * (Pitch / (Bpp / 8)) + x] = color;
+    if (x >= Width || y >= Height || x < 0 || y < 0) {
+        return;
     }
+    SwapBuffer[y * (Pitch / (Bpp / 8)) + x] = color;
 }
 void Graphics::Clear(int color) {
     for (int i = 0; i < Width * Height; ++i) {
         SwapBuffer[i] = color;
     }
 }
-/*
-void Graphics::Clear(int color) {
-    uint32_t *fb_ptr = SwapBuffer;
-    uint64_t pixel_count = Width * Height;
-    uint64_t i = 0;
-    
-    // Load color into an SSE register (128-bit, for 4 pixels)
-    __m128i color_vector;
-    color_vector = _mm_set1_epi32(color);
-
-    __asm__ __volatile__ (
-        "movdqu %%xmm0, %1\n\t"        // Load color into xmm0
-        "mov %0, %%rdi\n\t"           // Load framebuffer pointer into rdi
-        "mov %2, %%rcx\n\t"           // Load pixel_count into rcx
-        "shr $2, %%rcx\n\t"           // Divide pixel_count by 4 (4 pixels per iteration)
-        "1:\n\t"
-        "movntdq %%xmm0, (%%rdi)\n\t" // Store 4 pixels
-        "add $16, %%rdi\n\t"          // Move to the next block of 4 pixels (16 bytes)
-        "loop 1b\n\t"                 // Loop until all pixels are set
-        : "r"(fb_ptr), "m"(color_vector), "r"(pixel_count)
-        : "xmm0", "rdi", "rcx", "memory"
-    );
-}
-*/
 
 void Graphics::Clear() {
     Clear(0);
@@ -121,7 +99,15 @@ void Graphics::DrawChar(char c, int x, int y, uint8_t scaling, int color)
         }
     }   
 }
-void Graphics::DrawChar(char c, int x, int y, int color) {
+void Graphics::DrawString(StringObj str, int x, int y, uint8_t scaling, int color)
+{
+    for (size_t i = 0; i < str.Length(); ++i)
+    {
+        DrawChar(str[i], x + i * GlyphWidth * scaling / 2, y, scaling, color);
+    }
+}
+void Graphics::DrawChar(char c, int x, int y, int color)
+{
     const int glyph_width = GlyphWidth;
     const int glyph_height = GlyphHeight;
     const int image_width = BitmapFontSheetWidth;
@@ -156,6 +142,13 @@ void Graphics::DrawString(char *str, int x, int y, int color) {
     }
 }
 
+void Graphics::DrawString(StringObj str, int x, int y, int color)
+{
+    for (size_t i = 0; i < str.Length(); ++i)
+    {
+        DrawChar(str[i], x + i * FontLetterSpacing, y, color);
+    }
+}
 void Graphics::DrawLine(int x1, int y1, int x2, int y2, int color) {
     int dx = MathI::Absolute(x2 - x1);
     int dy = MathI::Absolute(y2 - y1);
@@ -265,7 +258,9 @@ int BlendAlpha(int toColor, int fromColor, uint8_t alpha)
 
 
 void Graphics::DrawAlphaPixel(int x, int y, uint32_t Color) {
-    //put pixel with transparency
+    if (x >= Width && y >= Height && x < 0 && y < 0) {
+        return;
+    }
     if (x < Width && y < Height) {
         int alpha = (Color >> 24) & 0xFF;
         if (alpha == 0) return;
@@ -340,13 +335,24 @@ inline void get_pixel_from_bitmap(long *bmpdata, int x, int y, int width, int he
 
 int* Graphics::ClipFromScreen(int x, int y, int w, int h)
 {
-    int* clipped = (int*)KernelAllocate(w * h * 4);
+    int* data = (int*)KernelAllocate(w * h * sizeof(int));
     for (int i = 0; i < h; i++)
     {
         for (int j = 0; j < w; j++)
         {
-            clipped[i * w + j] = GetPixelFromScreen(x + j, y + i);
+            data[i * w + j] = GetPixelFromScreen(x + j, y + i);
         }
     }
-    return clipped;
+    return data;
+}
+void Graphics::ClipFromScreen(int x, int y, BMPI *Bimage)
+{
+    //Assume data is already allocated
+    for (int i = 0; i < Bimage->height; i++)
+    {
+        for (int j = 0; j < Bimage->width; j++)
+        {
+            Bimage->data[i * Bimage->width + j] = GetPixelFromScreen(x + j, y + i);
+        }
+    }
 }
