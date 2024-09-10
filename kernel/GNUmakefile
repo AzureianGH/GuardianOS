@@ -53,6 +53,7 @@ $(eval $(call DEFAULT_VAR,LDFLAGS,$(DEFAULT_LDFLAGS)))
 override SHARED_FLAGS := \
     -Wall \
     -Wextra \
+    -Werror \
     -Wno-write-strings \
     -ffreestanding \
     -fno-stack-protector \
@@ -63,8 +64,7 @@ override SHARED_FLAGS := \
     -march=x86-64 \
     -m80387 \
     -mmmx \
-    -msse \
-    -msse2 \
+    -msse4.2 \
     -mno-red-zone \
     -Wno-unused-variable \
     -Wno-maybe-uninitialized \
@@ -78,10 +78,10 @@ override SHARED_FLAGS := \
     -fno-permissive \
     -fno-rtti \
     -O2 \
-    -Werror \
-    -Wall \
-    -Wextra \
-
+    -finline-functions \
+    -funroll-loops \
+    -fomit-frame-pointer \
+    -mfpmath=sse \
 
 # Internal C++ flags that should not be changed by the user.
 override CXXFLAGS += \

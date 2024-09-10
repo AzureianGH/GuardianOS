@@ -432,12 +432,11 @@ extern void kernel_main() {
     Taskbar taskbar(&graphics);
     while (true)
     {
+        graphics.Clear(0);
         taskbar.Draw();
         DrawCursor();
         graphics.Display();
         
     }
-    
-
     halt();
 }
