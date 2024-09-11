@@ -268,6 +268,27 @@ void DrawCursor()
     graphics.DrawLine(mx + 6, my + 13, mx + 6, my + 14, 0x0f141c);
 }
 
+void DrawPixelWithAlpha(int x, int y, int color, float alpha) {
+        // Assuming you have a function to draw a pixel with alpha blending
+        int r = (color >> 16) & 0xFF;
+        int g = (color >> 8) & 0xFF;
+        int b = color & 0xFF;
+
+        // Blend the color with the existing pixel color here
+        // Example:
+        int existingColor = graphics.GetPixel(x, y);
+        int existingR = (existingColor >> 16) & 0xFF;
+        int existingG = (existingColor >> 8) & 0xFF;
+        int existingB = existingColor & 0xFF;
+        int newR = (int)((r * alpha) + (existingR * (1 - alpha)));
+        int newG = (int)((g * alpha) + (existingG * (1 - alpha)));
+        int newB = (int)((b * alpha) + (existingB * (1 - alpha)));
+        graphics.DrawPixel(x, y, (newR << 16) | (newG << 8) | newB);
+};
+void DrawRectAl(int x, int y, int w, int h, int color, float alpha)
+{
+
+}
 extern void kernel_main() {
     
     
@@ -481,7 +502,7 @@ extern void kernel_main() {
             RightPoint.y = GetMouseYPos();
         }
 
-        graphics.DrawCubicCurve(LeftPoint.x, LeftPoint.y, MiddlePoint.x, MiddlePoint.y, RightPoint.x, RightPoint.y, GetMouseXPos(), GetMouseYPos(), 0xFFFFFF);
+        graphics.DrawBézierCurve(LeftPoint.x, LeftPoint.y, MiddlePoint.x, MiddlePoint.y, RightPoint.x, RightPoint.y, 0xFFFFFF);
         DrawCursor();
         graphics.Display();
     }

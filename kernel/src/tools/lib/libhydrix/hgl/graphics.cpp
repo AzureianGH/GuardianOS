@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <libhydrix/hmem/smem/smem.h>
 
+
 typedef union __attribute__((aligned(16))) __m128i {
     int32_t m128i_i32[4];
     uint64_t m128i_u64[2];
@@ -443,4 +444,8 @@ void Graphics::DrawCubicCurve(float x0, float y0, float x1, float y1, float x2, 
         // Draw the pixel at the calculated point, rounded to the nearest integer
         DrawPixel((int)x, (int)y, color);
     }
+}
+int Graphics::GetPixel(int x, int y)
+{
+    return GetPixelFromScreen(x,y);
 }

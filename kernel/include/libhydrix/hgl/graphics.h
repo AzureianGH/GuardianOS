@@ -202,4 +202,9 @@ class Graphics {
         /// @param y3 The vertical position of the fourth point
         /// @param color The color
         void DrawCubicCurve(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, int color);
+        /// @brief Gets a pixel from the screen
+        /// @param x Horizontal position
+        /// @param y Vertical position
+        /// @return The pixel color
+        int GetPixel(int x, int y);
 };
