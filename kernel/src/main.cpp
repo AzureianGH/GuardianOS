@@ -267,6 +267,7 @@ void DrawCursor()
     graphics.DrawPixel(mx + 8, my + 9, 0x0f141c);
     graphics.DrawLine(mx + 6, my + 13, mx + 6, my + 14, 0x0f141c);
 }
+
 extern void kernel_main() {
     
     
@@ -430,15 +431,59 @@ extern void kernel_main() {
     /// # START #
     /// #########
     Taskbar taskbar(&graphics);
+    Point LeftPoint = { 0, 0 }; bool LeftDown = false;
+    Point MiddlePoint = { 0, 0 }; bool MiddleDown = false;
+    Point RightPoint = { 0, 0 }; bool RightDown = false;
+    MouseState last = MOUSE_NONE;
     while (true)
     {
         graphics.Clear(0);
-        //draw curve in the middle
-        graphics.DrawBézierCurve(0, 10, 20, 30, 40, 50, 0xFFFFFF);
         taskbar.Draw();
+        
+        //randomly move each point
+        if (GetCurrentMouseState() == MOUSE_LEFT)
+        {
+            LeftDown = true;
+        }
+        else
+        {
+            LeftDown = false;
+        }
+        if (GetCurrentMouseState() == MOUSE_MIDDLE)
+        {
+            MiddleDown = true;
+        }
+        else
+        {
+            MiddleDown = false;
+        }
+        if (GetCurrentMouseState() == MOUSE_RIGHT)
+        {
+            RightDown = true;
+        }
+        else
+        {
+            RightDown = false;
+        }
+        if (LeftDown)
+        {
+            LeftPoint.x = GetMouseXPos();
+            LeftPoint.y = GetMouseYPos();
+        }
+        if (MiddleDown)
+        {
+            MiddlePoint.x = GetMouseXPos();
+            MiddlePoint.y = GetMouseYPos();
+        }
+        if (RightDown)
+        {
+            RightPoint.x = GetMouseXPos();
+            RightPoint.y = GetMouseYPos();
+        }
+
+        graphics.DrawCubicCurve(LeftPoint.x, LeftPoint.y, MiddlePoint.x, MiddlePoint.y, RightPoint.x, RightPoint.y, GetMouseXPos(), GetMouseYPos(), 0xFFFFFF);
         DrawCursor();
         graphics.Display();
-        
     }
     halt();
 }

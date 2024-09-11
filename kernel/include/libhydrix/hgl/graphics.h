@@ -190,5 +190,16 @@ class Graphics {
         /// @param x2 The horizontal position of the third point
         /// @param y2 The vertical position of the third point
         /// @param color The color
-        void DrawBézierCurve(int x0, int y0, int x1, int y1, int x2, int y2, int color);
+        void DrawBézierCurve(float x0, float y0, float x1, float y1, float x2, float y2, int color);
+        /// @brief Draw a Cubic curve
+        /// @param x0 The horizontal position of the first point
+        /// @param y0 The vertical position of the first point
+        /// @param x1 The horizontal position of the second point
+        /// @param y1 The vertical position of the second point
+        /// @param x2 The horizontal position of the third point
+        /// @param y2 The vertical position of the third point
+        /// @param x3 The horizontal position of the fourth point
+        /// @param y3 The vertical position of the fourth point
+        /// @param color The color
+        void DrawCubicCurve(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, int color);
 };

@@ -357,14 +357,90 @@ void Graphics::ClipFromScreen(int x, int y, BMPI *Bimage)
         }
     }
 }
-void Graphics::DrawBézierCurve(int x0, int y0, int x1, int y1, int x2, int y2, int color)
+void Graphics::DrawBézierCurve(float x0, float y0, float x1, float y1, float x2, float y2, int color)
 {
-    float x = 0;
-    float y = 0;
-    for (float t = 0; t <= 1; t += 0.001)
+    // Calculate distances between control points
+    float dist_p0_p1 = MathF::SquareRoot((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0));
+    float dist_p1_p2 = MathF::SquareRoot((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+    float dist_p0_p2 = MathF::SquareRoot((x2 - x0) * (x2 - x0) + (y2 - y0) * (y2 - y0));
+
+    // Estimate the total distance the curve will cover
+    float total_distance = dist_p0_p1 + dist_p1_p2 + dist_p0_p2;
+
+    // Define the maximum distance between consecutive points on the curve
+    const float max_pixel_step = 1.0f; // This controls the smoothness of the curve
+
+    // Determine the number of steps based on the total distance
+    int steps = (int)(total_distance / max_pixel_step);
+
+    // Ensure we have at least 1 step
+    if (steps < 1) steps = 1;
+
+    // Iterate over t, which goes from 0.0 to 1.0 in increments
+    for (int i = 0; i <= steps; ++i)
     {
-        x = (1 - t) * (1 - t) * x0 + 2 * (1 - t) * t * x1 + t * t * x2;
-        y = (1 - t) * (1 - t) * y0 + 2 * (1 - t) * t * y1 + t * t * y2;
-        DrawPixelInline(x, y, color);
+        // Calculate the parameter t
+        float t = (float)i / (float)steps;
+
+        // Calculate the interpolated points for the Bézier curve using float precision
+        float xa = x0 + t * (x1 - x0);
+        float ya = y0 + t * (y1 - y0);
+        float xb = x1 + t * (x2 - x1);
+        float yb = y1 + t * (y2 - y1);
+
+        // Final point on the curve
+        float x = xa + t * (xb - xa);
+        float y = ya + t * (yb - ya);
+
+        // Draw the pixel at the calculated point, rounded to the nearest integer
+        DrawPixelInline((int)x, (int)y, color);
+    }
+}
+
+void Graphics::DrawCubicCurve(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, int color)
+{
+    // Calculate distances between consecutive control points
+    float dist_p0_p1 = MathF::SquareRoot((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0));
+    float dist_p1_p2 = MathF::SquareRoot((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+    float dist_p2_p3 = MathF::SquareRoot((x3 - x2) * (x3 - x2) + (y3 - y2) * (y3 - y2));
+    float dist_p0_p3 = MathF::SquareRoot((x3 - x0) * (x3 - x0) + (y3 - y0) * (y3 - y0));
+
+    // Estimate the total distance the curve will cover
+    float total_distance = dist_p0_p1 + dist_p1_p2 + dist_p2_p3 + dist_p0_p3;
+
+    // Define the maximum distance between consecutive points on the curve
+    const float max_pixel_step = 1.0f; // This controls the smoothness of the curve
+
+    // Determine the number of steps based on the total distance
+    int steps = (int)(total_distance / max_pixel_step);
+
+    // Ensure we have at least 1 step
+    if (steps < 1) steps = 1;
+
+    // Iterate over t, which goes from 0.0 to 1.0 in increments
+    for (int i = 0; i <= steps; ++i)
+    {
+        // Calculate the parameter t
+        float t = (float)i / (float)steps;
+
+        // Calculate the interpolated points for the cubic Bézier curve using float precision
+        float xa = x0 + t * (x1 - x0);
+        float ya = y0 + t * (y1 - y0);
+        float xb = x1 + t * (x2 - x1);
+        float yb = y1 + t * (y2 - y1);
+        float xc = x2 + t * (x3 - x2);
+        float yc = y2 + t * (y3 - y2);
+
+        float xm = xa + t * (xb - xa);
+        float ym = ya + t * (yb - ya);
+        float xn = xb + t * (xc - xb);
+        float yn = yb + t * (yc - yb);
+
+        // Final point on the curve
+        float x = xm + t * (xn - xm);
+        float y = ym + t * (yn - ym);
+
+        // Draw the pixel at the calculated point, rounded to the nearest integer
+        DrawPixel((int)x, (int)y, color);
     }
 }
