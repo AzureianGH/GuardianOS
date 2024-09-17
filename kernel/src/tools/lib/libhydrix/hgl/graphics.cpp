@@ -2,26 +2,16 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <libhydrix/hmem/smem/smem.h>
+#include <libhydrix/htime/htime.h>
+#include <libhydrix/hlow/pit/pit.h>
 
+int MaxHz = 60;
+// Target frame time in milliseconds
+const float target_frame_time = 1000.0f / MaxHz; 
 
-typedef union __attribute__((aligned(16))) __m128i {
-    int32_t m128i_i32[4];
-    uint64_t m128i_u64[2];
-    __int128 m128i_i128;
-} __m128i;
-inline __m128i _mm_set1_epi32(int32_t i) {
-    __m128i result;
+uint64_t CachedWHB8 = 0;
+uint16_t CachedPB8 = 0;
 
-    __asm__ __volatile__ (
-        "movd %1, %%xmm0\n\t"        // Move the 32-bit integer into the lower 32 bits of xmm0
-        "pshufd $0x00, %%xmm0, %0\n\t"  // Shuffle all 4 DWORDs in xmm0 to contain the same value
-        : "=x"(result)
-        : "r"(i)
-        : "xmm0"
-    );
-
-    return result;
-}
 // Graphics class constructor
 Graphics::Graphics() {}
 
@@ -43,7 +33,8 @@ void Graphics::Init(uint32_t* fb, uint64_t width, uint64_t height, uint64_t Pitc
     FontLetterSpacing = COURIERNEW_GLYPH_SPACE;
     BitmapFontSheetWidth = COURIERNEW_WIDTH;
     // Allocate the swap buffer
-
+    CachedWHB8 = Width * Height * (Bpp/8);
+    CachedPB8 = Pitch / (Bpp / 8);
     //allocate memory to get rid of bad data
     void* eeee = KernelAllocate(width * height * Bpp);
     SwapBuffer = (uint32_t*)KernelCleanAllocate(width * height * Bpp);
@@ -54,14 +45,14 @@ inline void Graphics::DrawPixelInline(int x, int y, int color) {
     if (x >= Width || y >= Height || x < 0 || y < 0) {
         return;
     }
-    SwapBuffer[y * (Pitch / (Bpp / 8)) + x] = color;
+    SwapBuffer[y * CachedPB8 + x] = color;
 }
 
 void Graphics::DrawPixel(int x, int y, int color) {
     if (x >= Width || y >= Height || x < 0 || y < 0) {
         return;
     }
-    SwapBuffer[y * (Pitch / (Bpp / 8)) + x] = color;
+    SwapBuffer[y * CachedPB8 + x] = color;
 }
 void Graphics::Clear(int color) {
     for (int i = 0; i < Width * Height; ++i) {
@@ -228,10 +219,28 @@ void Graphics::DrawFilledCircle(int x0, int y0, int radius, int color) {
         }
     }
 }
-
+uint64_t last_frame_time = 0;
 void Graphics::Display() {
-    memcpy(FrameBuffer, SwapBuffer, Width * Height * (Bpp/8));
+    last_frame_time = TimeSinceBootMS(); // Initialize to current time
+
+    uint64_t current_time = TimeSinceBootMS();
+    uint64_t elapsed_time = current_time - last_frame_time;
+
+    if (elapsed_time < target_frame_time) {
+        uint64_t sleep_time = target_frame_time - elapsed_time;
+        PITSleepMS(sleep_time); // Sleep for the remainder of the frame time
+        // Sleep may not be precise, so update time after sleeping
+        current_time = TimeSinceBootMS(); 
+    }
+
+    // Copy frame buffer to swap buffer
+    memcpy(FrameBuffer, SwapBuffer, CachedWHB8);
+
+    // Update the last frame time
+    last_frame_time = current_time;
 }
+
+
 
 void Graphics::DrawImage(int x, int y, BMPI Bimage) {
     for (int i = 0; i < Bimage.height; ++i) {

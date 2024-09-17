@@ -22,7 +22,7 @@ override DEFAULT_CXX := ../compiler/bin/x86_64-elf-g++
 $(eval $(call DEFAULT_VAR,CXX,$(DEFAULT_CXX)))
 
 # Same thing for "cc" (the C compiler).
-override DEFAULT_CC := cc
+override DEFAULT_CC := ../compiler/bin/x86_64-elf-gcc
 $(eval $(call DEFAULT_VAR,CC,$(DEFAULT_CC)))
 
 # Same thing for "ld" (the linker).
@@ -75,21 +75,20 @@ override SHARED_FLAGS := \
     -Wno-int-to-pointer-cast \
     -Wno-error=array-bounds= \
     -Wno-unused-function \
-    -fno-permissive \
-    -fno-rtti \
     -O2 \
     -finline-functions \
     -funroll-loops \
     -fomit-frame-pointer \
     -mfpmath=sse \
+    -I./include \
+    -I./include/libhydrix \
 
 # Internal C++ flags that should not be changed by the user.
 override CXXFLAGS += \
     -std=gnu++20 \
+    -fno-permissive \
     -fno-rtti \
     -fno-exceptions \
-    -I./include \
-    -I./include/libhydrix \
     $(SHARED_FLAGS)
 
 # Internal C flags that should not be changed by the user.

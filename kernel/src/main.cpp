@@ -285,10 +285,6 @@ void DrawPixelWithAlpha(int x, int y, int color, float alpha) {
         int newB = (int)((b * alpha) + (existingB * (1 - alpha)));
         graphics.DrawPixel(x, y, (newR << 16) | (newG << 8) | newB);
 };
-void DrawRectAl(int x, int y, int w, int h, int color, float alpha)
-{
-
-}
 extern void kernel_main() {
     
     
@@ -344,7 +340,6 @@ extern void kernel_main() {
     SetMouseConsole(&console);
     InitializeSyscall(&console);
     SetPCIConsole(&console);
-    SetACPIConsole(&console);
     console.WriteLine("Initializing FPU...", IColor::RGB(170, 170, 170));
     if (FPU::IsFPUEnabled())
     {
@@ -374,26 +369,6 @@ extern void kernel_main() {
     InitializeTime();
     console.WriteLine("IDT Initialized!", IColor::RGB(170, 255, 170));
     //paging
-    console.WriteLine("Initializing ACPI...", IColor::RGB(170, 170, 170));
-    
-    if (acpiEnable() == -1)
-    {
-        
-        console.WriteLine("ACPI Not Detected!", IColor::RGB(255, 170, 170));
-        string reason = GetReasonForFailureACPI();
-        console.WriteLine(StringConcatenate("Reason: ", reason), IColor::RGB(255, 170, 170));
-        console.WriteLine("ACPI Failed To Initialized!", IColor::RGB(255, 120, 120));
-        InitalizedFailure = true;
-        InitFailures[InitFailuresIndex] = "ACPI";
-        InitFailuresIndex++;
-        
-    }
-    else
-    {
-        console.WriteLine("ACPI Detected!", IColor::RGB(170, 255, 170));
-        console.WriteLine("ACPI Initialized!", IColor::RGB(170, 255, 170));
-        initAcpi();
-    }
     #ifndef SKIP_BOOT_FAILURE
         if (InitalizedFailure)
         {
@@ -460,49 +435,7 @@ extern void kernel_main() {
     {
         graphics.Clear(0);
         taskbar.Draw();
-        
-        //randomly move each point
-        if (GetCurrentMouseState() == MOUSE_LEFT)
-        {
-            LeftDown = true;
-        }
-        else
-        {
-            LeftDown = false;
-        }
-        if (GetCurrentMouseState() == MOUSE_MIDDLE)
-        {
-            MiddleDown = true;
-        }
-        else
-        {
-            MiddleDown = false;
-        }
-        if (GetCurrentMouseState() == MOUSE_RIGHT)
-        {
-            RightDown = true;
-        }
-        else
-        {
-            RightDown = false;
-        }
-        if (LeftDown)
-        {
-            LeftPoint.x = GetMouseXPos();
-            LeftPoint.y = GetMouseYPos();
-        }
-        if (MiddleDown)
-        {
-            MiddlePoint.x = GetMouseXPos();
-            MiddlePoint.y = GetMouseYPos();
-        }
-        if (RightDown)
-        {
-            RightPoint.x = GetMouseXPos();
-            RightPoint.y = GetMouseYPos();
-        }
-
-        graphics.DrawBézierCurve(LeftPoint.x, LeftPoint.y, MiddlePoint.x, MiddlePoint.y, RightPoint.x, RightPoint.y, 0xFFFFFF);
+        graphics.DrawString((StringObj)"Time (MS): " + GetSystemTime(), 0, 50, 0xFFFFFF);
         DrawCursor();
         graphics.Display();
     }

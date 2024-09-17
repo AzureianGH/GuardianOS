@@ -118,3 +118,5 @@ BMPA Stretch_BMPA(BMPA bmp, int width, int height);
 typedef uint16_t word;
 typedef uint32_t dword;
 typedef uint64_t qword;
+
+#define nullptr 0

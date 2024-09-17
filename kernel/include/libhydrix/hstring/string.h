@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <libhydrix/hmem/smem/heap.h>
+
 //include va list
 #include <stdarg.h>
 
@@ -111,14 +112,15 @@ public:
     }
 
     // Move constructor
-    StringObj(StringObj&& other) noexcept : str(other.str), len(other.len) {
-        other.str = nullptr;
+    StringObj(StringObj&& other) : str(other.str), len(other.len) {
+        other.str = 0;
         other.len = 0;
     }
 
     // Assignment operators
     StringObj& operator=(const char* newStr) {
         if (this->str != newStr) {
+            //free with the byte lengh
             KernelFree(str);
             len = StringLength(newStr);
             str = (char*)KernelAllocate(len + 1);
@@ -137,12 +139,12 @@ public:
         return *this;
     }
     // = then string
-    StringObj& operator=(StringObj&& other) noexcept {
+    StringObj& operator=(StringObj&& other) {
         if (this != &other) {
             KernelFree(str);
             len = other.len;
             str = other.str;
-            other.str = nullptr;
+            other.str = 0;
             other.len = 0;
         }
         return *this;
