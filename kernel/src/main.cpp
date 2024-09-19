@@ -435,7 +435,7 @@ extern void kernel_main() {
     {
         graphics.Clear(0);
         taskbar.Draw();
-        graphics.DrawString((StringObj)"Time (MS): " + GetSystemTime(), 0, 50, 0xFFFFFF);
+        graphics.DrawString((StringObj)"Time (MS): " + TimeGetMilliseconds(), 0, 50, 0xFFFFFF);
         DrawCursor();
         graphics.Display();
     }

@@ -11,7 +11,7 @@ const float target_frame_time = 1000.0f / MaxHz;
 
 uint64_t CachedWHB8 = 0;
 uint16_t CachedPB8 = 0;
-
+uint64_t last_frame_time = 0;
 // Graphics class constructor
 Graphics::Graphics() {}
 
@@ -35,6 +35,7 @@ void Graphics::Init(uint32_t* fb, uint64_t width, uint64_t height, uint64_t Pitc
     // Allocate the swap buffer
     CachedWHB8 = Width * Height * (Bpp/8);
     CachedPB8 = Pitch / (Bpp / 8);
+    last_frame_time = TimeSinceBootMS(); // Initialize to current time
     //allocate memory to get rid of bad data
     void* eeee = KernelAllocate(width * height * Bpp);
     SwapBuffer = (uint32_t*)KernelCleanAllocate(width * height * Bpp);
@@ -219,28 +220,48 @@ void Graphics::DrawFilledCircle(int x0, int y0, int radius, int color) {
         }
     }
 }
-uint64_t last_frame_time = 0;
+
+uint64_t currentTime = 0;
+uint64_t lastFrameTime = 0;
+const uint64_t targetFrameTime = 1000 / 60; // 60 FPS in milliseconds
+int currentPointY = 16; // Initial vertical position
+bool drawframe = false;
 void Graphics::Display() {
-    last_frame_time = TimeSinceBootMS(); // Initialize to current time
+    // Get the current time in milliseconds
+    currentTime = TimeGetMilliseconds();
+    
+    // Calculate the time taken to process the last frame
+    uint64_t frameProcessingTime = currentTime - lastFrameTime;
 
-    uint64_t current_time = TimeSinceBootMS();
-    uint64_t elapsed_time = current_time - last_frame_time;
+    // Calculate the sleep time needed to maintain target frame rate
+    if (frameProcessingTime < targetFrameTime) {
+        uint64_t sleepTime = targetFrameTime - frameProcessingTime;
 
-    if (elapsed_time < target_frame_time) {
-        uint64_t sleep_time = target_frame_time - elapsed_time;
-        PITSleepMS(sleep_time); // Sleep for the remainder of the frame time
-        // Sleep may not be precise, so update time after sleeping
-        current_time = TimeSinceBootMS(); 
+    }
+    // Update last frame time for the next call
+    lastFrameTime = TimeGetMilliseconds();
+
+    if (drawframe)
+    {
+        // Flip the buffers
+        uint32_t* temp = FrameBuffer;
+        FrameBuffer = SwapBuffer;
+        SwapBuffer = temp;
     }
 
-    // Copy frame buffer to swap buffer
-    memcpy(FrameBuffer, SwapBuffer, CachedWHB8);
-
-    // Update the last frame time
-    last_frame_time = current_time;
+    // Update the vertical position for drawing
+    currentPointY = Height - 16;
 }
 
 
+
+
+void Graphics::PrintDebug(StringObj Debug)
+{
+    //draw on bottom left
+    DrawString(Debug, 0, currentPointY, 0xFFFFFF);
+    currentPointY -= 16;
+}
 
 void Graphics::DrawImage(int x, int y, BMPI Bimage) {
     for (int i = 0; i < Bimage.height; ++i) {

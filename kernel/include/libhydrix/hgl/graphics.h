@@ -207,4 +207,5 @@ class Graphics {
         /// @param y Vertical position
         /// @return The pixel color
         int GetPixel(int x, int y);
+        void PrintDebug(StringObj Debug);
 };
