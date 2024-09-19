@@ -129,6 +129,8 @@ class Graphics {
         /// @brief Swap the buffer
         /// @warning MUST BE CALLED AFTER DRAWING FOR ANYTHING TO BE VISIBLE
         void Display();
+        /// @brief Display the buffer without waiting for the next frame
+        void DisplayNonSynced();
         /// @brief Draws an image to the screen (bitmap)
         /// @param x The horizontal position
         /// @param y The vertical position
@@ -207,5 +209,6 @@ class Graphics {
         /// @param y Vertical position
         /// @return The pixel color
         int GetPixel(int x, int y);
+        void SetHz(uint64_t hz);
         void PrintDebug(StringObj Debug);
 };

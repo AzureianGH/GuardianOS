@@ -5,13 +5,15 @@
 #include <libhydrix/htime/htime.h>
 #include <libhydrix/hlow/pit/pit.h>
 
-int MaxHz = 60;
-// Target frame time in milliseconds
-const float target_frame_time = 1000.0f / MaxHz; 
 
+
+// Target frame time in milliseconds
+int MaxHz = 200;
 uint64_t CachedWHB8 = 0;
 uint16_t CachedPB8 = 0;
 uint64_t last_frame_time = 0;
+uint64_t targetFrameTime;
+int currentPointY = 16; // Initial vertical position
 // Graphics class constructor
 Graphics::Graphics() {}
 
@@ -35,6 +37,7 @@ void Graphics::Init(uint32_t* fb, uint64_t width, uint64_t height, uint64_t Pitc
     // Allocate the swap buffer
     CachedWHB8 = Width * Height * (Bpp/8);
     CachedPB8 = Pitch / (Bpp / 8);
+    targetFrameTime = 1000 / MaxHz;
     last_frame_time = TimeSinceBootMS(); // Initialize to current time
     //allocate memory to get rid of bad data
     void* eeee = KernelAllocate(width * height * Bpp);
@@ -59,6 +62,7 @@ void Graphics::Clear(int color) {
     for (int i = 0; i < Width * Height; ++i) {
         SwapBuffer[i] = color;
     }
+    currentPointY = Height - 16;
 }
 
 void Graphics::Clear() {
@@ -223,8 +227,9 @@ void Graphics::DrawFilledCircle(int x0, int y0, int radius, int color) {
 
 uint64_t currentTime = 0;
 uint64_t lastFrameTime = 0;
-const uint64_t targetFrameTime = 1000 / 60; // 60 FPS in milliseconds
-int currentPointY = 16; // Initial vertical position
+
+ // 60 FPS in milliseconds
+
 bool drawframe = false;
 void Graphics::Display() {
     // Get the current time in milliseconds
@@ -236,23 +241,18 @@ void Graphics::Display() {
     // Calculate the sleep time needed to maintain target frame rate
     if (frameProcessingTime < targetFrameTime) {
         uint64_t sleepTime = targetFrameTime - frameProcessingTime;
-
+        PITSleepMS(sleepTime);
     }
     // Update last frame time for the next call
     lastFrameTime = TimeGetMilliseconds();
 
-    if (drawframe)
-    {
-        // Flip the buffers
-        uint32_t* temp = FrameBuffer;
-        FrameBuffer = SwapBuffer;
-        SwapBuffer = temp;
-    }
-
-    // Update the vertical position for drawing
-    currentPointY = Height - 16;
+    // Flip the buffers
+    memcpy(FrameBuffer, SwapBuffer, CachedWHB8);
 }
-
+void Graphics::DisplayNonSynced()
+{
+    memcpy(FrameBuffer, SwapBuffer, CachedWHB8);
+}
 
 
 
@@ -478,4 +478,10 @@ void Graphics::DrawCubicCurve(float x0, float y0, float x1, float y1, float x2, 
 int Graphics::GetPixel(int x, int y)
 {
     return GetPixelFromScreen(x,y);
+}
+
+void Graphics::SetHz(uint64_t hz)
+{
+    MaxHz = hz;
+    targetFrameTime = 1000 / MaxHz; // 60 FPS in milliseconds
 }
