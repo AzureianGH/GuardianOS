@@ -11,6 +11,5 @@ enum class GenericDeviceDriver
     PIC,
     PIT,
     RTC,
-    Serial,
-
+    Serial
 };

@@ -19,7 +19,6 @@
 #include <libhydrix/hlow/idt/isr.h>
 #include <libhydrix/hlow/pic/pic.h>
 #include <libhydrix/hlow/pit/pit.h>
-#include <libhydrix/hlutil/hlmreq.h>
 #include <libhydrix/hmath/floatmath.h>
 #include <libhydrix/hmath/higherbitmath.h>
 #include <libhydrix/hmath/intmath.h>

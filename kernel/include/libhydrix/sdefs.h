@@ -111,8 +111,8 @@ typedef struct _bmpa
 
 typedef uint8_t byte;
 
-BMPI Stretch_BMPI(BMPI bmp, int width, int height);
-BMPA Stretch_BMPA(BMPA bmp, int width, int height);
+BMPI StretchBMPI(BMPI bmp, int width, int height);
+BMPA StretchBMPA(BMPA bmp, int width, int height);
 
 //word, dword, qword
 typedef uint16_t word;

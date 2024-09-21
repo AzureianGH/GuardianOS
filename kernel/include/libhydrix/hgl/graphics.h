@@ -209,6 +209,10 @@ class Graphics {
         /// @param y Vertical position
         /// @return The pixel color
         int GetPixel(int x, int y);
+        /// @brief Sets the refresh rate
+        /// @param hz The refresh rate
         void SetHz(uint64_t hz);
+        /// @brief Prints debug information
+        /// @param Debug The debug information
         void PrintDebug(StringObj Debug);
 };

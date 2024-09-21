@@ -39,16 +39,16 @@ int DATECOLOR = 0xFFFFFF;
 int fps = 0;
 int frames = 0;
 int last = 0;
-void ChangeTaskbarColor(int colorbg, int colorborder)
+void Taskbar::ChangeTaskbarColor(int colorbg, int colorborder)
 {
     TBCOLOR = colorbg;
     TBBOCOLOR = colorborder;
 }
-void ChangeTimeColor(int color)
+void Taskbar::ChangeTimeColor(int color)
 {
     TIMECOLOR = color;
 }
-void ChangeDateColor(int color)
+void Taskbar::ChangeDateColor(int color)
 {
     DATECOLOR = color;
 }
