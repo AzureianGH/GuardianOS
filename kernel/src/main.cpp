@@ -427,18 +427,14 @@ extern void kernel_main() {
     /// # START #
     /// #########
     Taskbar taskbar(&graphics);
-    Point LeftPoint = { 0, 0 }; bool LeftDown = false;
-    Point MiddlePoint = { 0, 0 }; bool MiddleDown = false;
-    Point RightPoint = { 0, 0 }; bool RightDown = false;
     MouseState last = MOUSE_NONE;
-    graphics.SetHz(10000000);
+    graphics.SetHz(200); 
     while (true)
     {
         graphics.Clear(0);
         taskbar.Draw();
-        graphics.DrawString((StringObj)"Time (MS): " + TimeGetMilliseconds(), 0, 50, 0xFFFFFF);
         DrawCursor();
-        graphics.DisplayNonSynced();
+        graphics.Display();
     }
     halt();
 }

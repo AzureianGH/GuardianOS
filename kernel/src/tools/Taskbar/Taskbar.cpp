@@ -92,11 +92,8 @@ void Taskbar::Draw()
     GraphicsObjectTask->DrawString(dateString, baseX1, baseY, DATECOLOR);
 
     
-    GraphicsObjectTask->DrawString((StringObj)"FPS: " + fps, 3, 3, DATECOLOR);
-    if (mx > 3 && mx < 80 && my > 3 && my < 11)
-    {
-        DrawMouseToolTip(GraphicsObjectTask, mx, my, "Frames Per Second");
-    }
+    GraphicsObjectTask->DrawString((StringObj)"System FPS: " + fps, 3, 3, DATECOLOR);
+    GraphicsObjectTask->DrawString((StringObj)"Graphics FPS: " + GraphicsObjectTask->GetDrawFPS(), 3, 20, DATECOLOR);
 
     frames++;
     //use rtc to get time in seconds getSeconds();

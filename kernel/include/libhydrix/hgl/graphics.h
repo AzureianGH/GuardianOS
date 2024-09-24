@@ -126,9 +126,11 @@ class Graphics {
         /// @param radius The radius
         /// @param color The color
         void DrawFilledCircle(int x0, int y0, int radius, int color);
-        /// @brief Swap the buffer
+        /// @brief Display the buffer with waiting for the next frame but not sleeping
         /// @warning MUST BE CALLED AFTER DRAWING FOR ANYTHING TO BE VISIBLE
         void Display();
+        /// @brief Display the buffer with waiting for the next frame AND sleeping to maintain the target frame rate, slows entire system.
+        void DisplayLockedSynced();
         /// @brief Display the buffer without waiting for the next frame
         void DisplayNonSynced();
         /// @brief Draws an image to the screen (bitmap)
@@ -215,4 +217,7 @@ class Graphics {
         /// @brief Prints debug information
         /// @param Debug The debug information
         void PrintDebug(StringObj Debug);
+        /// @brief Gets the display FPS of drawing, not system fps.
+        /// @return The display FPS
+        uint64_t GetDrawFPS();
 };

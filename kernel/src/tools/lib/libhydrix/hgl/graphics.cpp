@@ -7,12 +7,16 @@
 
 
 
-// Target frame time in milliseconds
-int MaxHz = 200;
+// Target frame rate in Hz
+int MaxHz = 60;
 uint64_t CachedWHB8 = 0;
 uint16_t CachedPB8 = 0;
 uint64_t last_frame_time = 0;
 uint64_t targetFrameTime;
+uint64_t frame_counter = 0;
+uint64_t fps_last_update = 0;
+int current_fps = 0;
+
 int currentPointY = 16; // Initial vertical position
 // Graphics class constructor
 Graphics::Graphics() {}
@@ -34,12 +38,15 @@ void Graphics::Init(uint32_t* fb, uint64_t width, uint64_t height, uint64_t Pitc
     GlyphHeight = COURIERNEW_GLYPH_HEIGHT;
     FontLetterSpacing = COURIERNEW_GLYPH_SPACE;
     BitmapFontSheetWidth = COURIERNEW_WIDTH;
+
     // Allocate the swap buffer
-    CachedWHB8 = Width * Height * (Bpp/8);
+    CachedWHB8 = Width * Height * (Bpp / 8);
     CachedPB8 = Pitch / (Bpp / 8);
-    targetFrameTime = 1000 / MaxHz;
+    targetFrameTime = 1000 / MaxHz; // Target frame time in ms
     last_frame_time = TimeSinceBootMS(); // Initialize to current time
-    //allocate memory to get rid of bad data
+    fps_last_update = last_frame_time;   // Initialize FPS timer
+
+    // Allocate memory to prevent bad data
     void* eeee = KernelAllocate(width * height * Bpp);
     SwapBuffer = (uint32_t*)KernelCleanAllocate(width * height * Bpp);
     KernelFree(eeee);
@@ -232,25 +239,53 @@ uint64_t lastFrameTime = 0;
 
 bool drawframe = false;
 void Graphics::Display() {
-    // Get the current time in milliseconds
-    currentTime = TimeGetMilliseconds();
-    
-    // Calculate the time taken to process the last frame
-    uint64_t frameProcessingTime = currentTime - lastFrameTime;
+    uint64_t current_time = TimeGetMilliseconds();
+    uint64_t delta_time = current_time - last_frame_time;
 
-    // Calculate the sleep time needed to maintain target frame rate
-    if (frameProcessingTime < targetFrameTime) {
-        uint64_t sleepTime = targetFrameTime - frameProcessingTime;
-        PITSleepMS(sleepTime);
+    // Frame time logic to maintain target FPS
+    if (delta_time < targetFrameTime) {
+        return; // Skip rendering if we're still within the target frame time
     }
-    // Update last frame time for the next call
-    lastFrameTime = TimeGetMilliseconds();
+
+    // Update frame counter for FPS calculation
+    frame_counter++;
+
+    // FPS calculation and update every second
+    if (current_time - fps_last_update >= 1000) {
+        current_fps = frame_counter;   // Store the calculated FPS
+        frame_counter = 0;             // Reset frame counter
+        fps_last_update = current_time; // Reset the last update time for FPS
+    }
 
     // Flip the buffers
     memcpy(FrameBuffer, SwapBuffer, CachedWHB8);
+
+    last_frame_time = current_time; // Update last frame time for the next call
 }
-void Graphics::DisplayNonSynced()
-{
+
+void Graphics::DisplayLockedSynced() {
+    uint64_t current_time = TimeGetMilliseconds();
+    uint64_t delta_time = current_time - last_frame_time;
+
+    // Sleep to maintain target FPS
+    if (delta_time < targetFrameTime) {
+        PITSleepMS(targetFrameTime - delta_time);
+    }
+
+    // Same as in the Display() method
+    frame_counter++;
+    if (current_time - fps_last_update >= 1000) {
+        current_fps = frame_counter;
+        frame_counter = 0;
+        fps_last_update = current_time;
+    }
+
+    memcpy(FrameBuffer, SwapBuffer, CachedWHB8);
+    last_frame_time = TimeGetMilliseconds();
+}
+
+void Graphics::DisplayNonSynced() {
+    // No sync, display immediately
     memcpy(FrameBuffer, SwapBuffer, CachedWHB8);
 }
 
@@ -484,4 +519,9 @@ void Graphics::SetHz(uint64_t hz)
 {
     MaxHz = hz;
     targetFrameTime = 1000 / MaxHz; // 60 FPS in milliseconds
+}
+
+uint64_t Graphics::GetDrawFPS()
+{
+    return current_fps;
 }
