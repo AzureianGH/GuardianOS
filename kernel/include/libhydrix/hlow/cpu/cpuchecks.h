@@ -68,5 +68,9 @@ class CPUSupport
             TM = 29,
             PBE = 31
         } CPUFeature;
-        static bool CPUSupportCheckFor(CPUFeature Feature);
+        static bool CPUSupportCheckFor(CPUFeature Feature, bool Extended); // Extended is for features that are in the EDX register
+        static char* GetRawCPUVendor();
+        static char* GetCPUVendor();
+        static char* GetRawCPUName();
+
 };

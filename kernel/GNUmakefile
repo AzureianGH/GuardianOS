@@ -64,7 +64,6 @@ override SHARED_FLAGS := \
     -march=x86-64 \
     -m80387 \
     -mmmx \
-    -msse4.2 \
     -mno-red-zone \
     -Wno-unused-variable \
     -Wno-maybe-uninitialized \
@@ -79,7 +78,9 @@ override SHARED_FLAGS := \
     -finline-functions \
     -funroll-loops \
     -fomit-frame-pointer \
-    -mfpmath=sse \
+    -mfpmath=sse+387 \
+    -Wno-error=type-limits \
+    -msse4.2 \
     -I./include \
     -I./include/libhydrix \
 

@@ -47,8 +47,8 @@ void Graphics::Init(uint32_t* fb, uint64_t width, uint64_t height, uint64_t Pitc
     fps_last_update = last_frame_time;   // Initialize FPS timer
 
     // Allocate memory to prevent bad data
-    void* eeee = KernelAllocate(width * height * Bpp);
-    SwapBuffer = (uint32_t*)KernelCleanAllocate(width * height * Bpp);
+    void* eeee = KernelAllocate(CachedWHB8);
+    SwapBuffer = (uint32_t*)KernelCleanAllocate(CachedWHB8);
     KernelFree(eeee);
 }
 

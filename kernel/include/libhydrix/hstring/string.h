@@ -189,7 +189,9 @@ public:
     explicit operator const char*() const {
         return str;
     }
-
+    char* c_str() {
+        return str;
+    }
     // Destructor
     ~StringObj() {
         if (str) {

@@ -8,6 +8,7 @@ typedef struct {
 	uint32_t vendor;
 	uint32_t device;
 	uint32_t func;
+	char* type;
 	struct __pci_driver *driver;
 } pci_device;
 
@@ -26,3 +27,6 @@ typedef struct __pci_driver {
 } pci_driver;
 void SetPCIConsole(Console *con);
 extern void InitializePCI();
+pci_device** GetPCIDevices();
+uint32_t GetPCIDeviceCount();
+pci_driver** GetPCIDrivers();

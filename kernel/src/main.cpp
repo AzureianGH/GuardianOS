@@ -364,6 +364,7 @@ extern void kernel_main() {
     //idt
     console.WriteLine("Initializing IDT...", IColor::RGB(170, 170, 170));
     InitializeISR();
+    
     EnableInterrupts();
     SetPITFrequency(1000);
     InitializeTime();
@@ -421,18 +422,29 @@ extern void kernel_main() {
     
     char* memesizzze = ToString(memsize);
     BMPI Stretched = *StretchImage(&BGImg, display.width, display.height);
-    Point MouseDragStart = { 0, 0 };
-    bool MouseDrag = false;
+
     /// #########
     /// # START #
     /// #########
     Taskbar taskbar(&graphics);
-    MouseState last = MOUSE_NONE;
-    graphics.SetHz(200); 
+    graphics.SetHz(200);
+    int numpr = GetPCIDeviceCount();
+
+    pci_device** drivers = GetPCIDevices();
+
     while (true)
     {
-        graphics.Clear(0);
+        console.Clear();
         taskbar.Draw();
+        console.WriteLine("");
+        console.WriteLine("");
+        console.WriteLine("");
+        //console.WriteLine(((StringObj)"Vendor: " + ToHexNumberString((uint64_t) drivers[0]->vendor) + " Device: " + ToHexNumberString((uint64_t) drivers[0]->device) + " Function: " + ToHexNumberString((uint64_t)drivers[0]->func)).c_str(), IColor::RGB(170, 255, 170));
+        //forloop print each driver
+        for (int i = 0; i < numpr; i++)
+        {
+            console.WriteLine(((StringObj)"Vendor: " + ToHexNumberString((uint64_t)drivers[i]->vendor) + " Device: " + ToHexNumberString((uint64_t)drivers[i]->device) + " Function: " + drivers[1]->type).c_str(), IColor::RGB(170, 255, 170));
+        }
         DrawCursor();
         graphics.Display();
     }

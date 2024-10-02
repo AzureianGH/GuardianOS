@@ -33,3 +33,4 @@
 #include <libhydrix/hlow/pci/pci.h>
 #include <libhydrix/hgl/image.h>
 #include <libhydrix/hlow/cpu/cpuchecks.h>
+#include <libhydrix/hfile/ahci.h>
