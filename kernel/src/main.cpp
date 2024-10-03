@@ -339,7 +339,6 @@ extern void kernel_main() {
     KeyboardInit(&console);
     SetMouseConsole(&console);
     InitializeSyscall(&console);
-    SetPCIConsole(&console);
     console.WriteLine("Initializing FPU...", IColor::RGB(170, 170, 170));
     if (FPU::IsFPUEnabled())
     {
@@ -401,7 +400,6 @@ extern void kernel_main() {
     console.WriteLine(StringConcatenate("Framebuffer Count: ", ToString(framebuffer_request.response->framebuffer_count)), IColor::RGB(170, 255, 170));
     //print memory size in MB
     console.WriteLine(ThreeStringConcatenate("Memory Size: ", ToString(memsize / 1024 / 1024), " MB"), IColor::RGB(170, 255, 170));
-    InitializePCI();
     PrintAvailableResolutions(framebuffer);
     //capture
     graphics.Display();
@@ -428,10 +426,7 @@ extern void kernel_main() {
     /// #########
     Taskbar taskbar(&graphics);
     graphics.SetHz(200);
-    int numpr = GetPCIDeviceCount();
-
-    pci_device** drivers = GetPCIDevices();
-
+    pci_init();
     while (true)
     {
         console.Clear();
@@ -439,12 +434,7 @@ extern void kernel_main() {
         console.WriteLine("");
         console.WriteLine("");
         console.WriteLine("");
-        //console.WriteLine(((StringObj)"Vendor: " + ToHexNumberString((uint64_t) drivers[0]->vendor) + " Device: " + ToHexNumberString((uint64_t) drivers[0]->device) + " Function: " + ToHexNumberString((uint64_t)drivers[0]->func)).c_str(), IColor::RGB(170, 255, 170));
-        //forloop print each driver
-        for (int i = 0; i < numpr; i++)
-        {
-            console.WriteLine(((StringObj)"Vendor: " + ToHexNumberString((uint64_t)drivers[i]->vendor) + " Device: " + ToHexNumberString((uint64_t)drivers[i]->device) + " Function: " + drivers[1]->type).c_str(), IColor::RGB(170, 255, 170));
-        }
+        pci_list(&console);
         DrawCursor();
         graphics.Display();
     }

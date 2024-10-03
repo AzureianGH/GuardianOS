@@ -80,6 +80,7 @@ override SHARED_FLAGS := \
     -fomit-frame-pointer \
     -mfpmath=sse+387 \
     -Wno-error=type-limits \
+    -Wno-error=missing-field-initializers \
     -msse4.2 \
     -I./include \
     -I./include/libhydrix \

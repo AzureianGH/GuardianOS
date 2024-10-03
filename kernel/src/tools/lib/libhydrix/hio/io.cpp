@@ -32,6 +32,7 @@ uint32_t PortIO::InLong(uint16_t port) {
 void PortIO::OutLong(uint16_t port, uint32_t data) {
     __asm__ __volatile__("outl %0, %1" : : "a"(data), "Nd"(port));
 }
+
 //ioPITWait
 void PortIO::IoPITWait(void) {
     InByte(0x80);
