@@ -323,4 +323,11 @@ extern "C" void ISRHandler(registers_t *r) {
   PortIO::OutByte(0x20, 0x20);
 
   if (eventHandlers[r->isrNumber] != NULL) eventHandlers[r->isrNumber](r);
+
+  //if null
+  if (eventHandlers[r->isrNumber] == NULL)
+  {
+    asm volatile("cli");
+    asm volatile("hlt");
+  }
 }

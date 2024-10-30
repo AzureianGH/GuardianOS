@@ -368,6 +368,10 @@ extern void kernel_main() {
     SetPITFrequency(1000);
     InitializeTime();
     console.WriteLine("IDT Initialized!", IColor::RGB(170, 255, 170));
+    //init PCI
+    console.WriteLine("Initializing PCI...", IColor::RGB(170, 170, 170));
+    PCIInit();
+    console.WriteLine("PCI Initialized!", IColor::RGB(170, 255, 170));
     //paging
     #ifndef SKIP_BOOT_FAILURE
         if (InitalizedFailure)
@@ -426,7 +430,14 @@ extern void kernel_main() {
     /// #########
     Taskbar taskbar(&graphics);
     graphics.SetHz(200);
-    pci_init();
+    Vector<pci_device_t> Testing = PCIGetDevices();
+    Vector<StringObj> PCIStrings;
+    for (int i = 0; i < Testing.Length(); i++)
+    {
+        pci_device_t dev = Testing.At(i);
+        StringObj devs = (StringObj)"Device: " + (StringObj)PCIDevice2IDString(dev);
+        PCIStrings.PushBack(devs);
+    }
     while (true)
     {
         console.Clear();
@@ -434,7 +445,13 @@ extern void kernel_main() {
         console.WriteLine("");
         console.WriteLine("");
         console.WriteLine("");
-        pci_list(&console);
+        //write each device String
+        for (int i = 0; i < PCIStrings.Length(); i++)
+        {
+            console.WriteLine(PCIStrings.At(i).c_str(), IColor::RGB(170, 255, 170));
+        }
+        
+
         DrawCursor();
         graphics.Display();
     }

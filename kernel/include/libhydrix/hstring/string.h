@@ -97,8 +97,9 @@ public:
     int Length() const {
         return len;
     }
-    // Constructors
-    explicit StringObj(const char* initialStr) {
+    
+    //implicit const char[]
+    StringObj(const char initialStr[]) {
         len = StringLength(initialStr);
         str = (char*)KernelAllocate(len + 1);
         StringCopy(str, initialStr);

@@ -32,10 +32,16 @@ typedef struct {
     char desc[256];
 } pci_device_desc_t;
 
-void pci_init(void);
-void pci_list(Console* console);
- const char *pci_device_id_to_string(pci_device_t *device);
+typedef struct {
+    uint32_t id;
+    uint8_t irq_line;
+    uint8_t irq_pin;
+} pci_irq_map_t;
 
+void PCIInit(void);
+void PCIList(Console* console);
+const char *PCIDevice2IDString(pci_device_t device);
+Vector<pci_device_t> PCIGetDevices();
 uint8_t pci_inb(uint32_t id, uint32_t offset);
 void pci_outb(uint32_t id, uint32_t offset, uint8_t data);
 uint16_t pci_inw(uint32_t id, uint32_t offset);
@@ -90,8 +96,6 @@ void pci_get_bar(pci_bar_t *bar, uint32_t id, uint32_t index);
 #define PCI_CONFIG_SUBSYSTEM_DEVICE_ID  0x2e
 #define PCI_CONFIG_EXPANSION_ROM        0x30
 #define PCI_CONFIG_CAPABILITIES         0x34
-#define PCI_CONFIG_INTERRUPT_LINE       0x3c
-#define PCI_CONFIG_INTERRUPT_PIN        0x3d
 #define PCI_CONFIG_MIN_GRANT            0x3e
 #define PCI_CONFIG_MAX_LATENCY          0x3f
 
@@ -260,3 +264,5 @@ void pci_get_bar(pci_bar_t *bar, uint32_t id, uint32_t index);
 /* Data Acquisition and Signal Processing Controllers */
 #define PCI_SP_DPIO                     0x1100
 #define PCI_SP_OTHER                    0x1180
+#define PCI_CONFIG_INTERRUPT_LINE       0x3C
+#define PCI_CONFIG_INTERRUPT_PIN        0x3D
