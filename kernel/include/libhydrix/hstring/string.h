@@ -191,7 +191,9 @@ public:
         return str;
     }
     char* c_str() {
-        return str;
+        string newStr = (string)KernelAllocate(len + 1);
+        StringCopy(newStr, str);
+        return newStr;
     }
     // Destructor
     ~StringObj() {

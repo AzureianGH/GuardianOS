@@ -365,7 +365,7 @@ extern void kernel_main() {
     InitializeISR();
     
     EnableInterrupts();
-    SetPITFrequency(1000);
+    SetPITFrequency(1);
     InitializeTime();
     console.WriteLine("IDT Initialized!", IColor::RGB(170, 255, 170));
     //init PCI
@@ -435,7 +435,7 @@ extern void kernel_main() {
     for (int i = 0; i < Testing.Length(); i++)
     {
         pci_device_t dev = Testing.At(i);
-        StringObj devs = (StringObj)"Device: " + (StringObj)PCIDevice2IDString(dev);
+        StringObj devs = StringConcatenate("Device: ", PCIDevice2IDString(dev));
         PCIStrings.PushBack(devs);
     }
     while (true)
