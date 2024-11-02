@@ -365,7 +365,7 @@ extern void kernel_main() {
     InitializeISR();
     
     EnableInterrupts();
-    SetPITFrequency(1);
+    SetPITFrequency(1000);
     InitializeTime();
     console.WriteLine("IDT Initialized!", IColor::RGB(170, 255, 170));
     //init PCI
@@ -450,8 +450,6 @@ extern void kernel_main() {
         {
             console.WriteLine(PCIStrings.At(i).c_str(), IColor::RGB(170, 255, 170));
         }
-        
-
         DrawCursor();
         graphics.Display();
     }
