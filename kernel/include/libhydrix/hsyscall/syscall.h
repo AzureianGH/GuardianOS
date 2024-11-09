@@ -5,4 +5,3 @@
 #define SYSCALLINT 0x80
 
 void InitializeSyscall(Console* con);
-void HandleSyscall(registers_t *r);

@@ -1,4 +1,5 @@
 section .text
+
 %macro pushall 0
 push rax
 push rbx
@@ -35,13 +36,23 @@ pop rbx
 pop rax
 %endmacro
 
-extern ISRHandler
-
+extern ISRHandler ; Returns void
+extern ISRHandlerSyscall ; Returns void
 isr_default:
   cli
   pushall
   mov rdi, rsp 
   call ISRHandler
+  popall
+  add rsp, 24
+  sti
+  iretq
+
+isr_syscall: ; ISRHandlerSyscall returns a number into rax
+  cli
+  pushall
+  mov rdi, rsp
+  call ISRHandlerSyscall
   popall
   add rsp, 24
   sti
@@ -62,6 +73,15 @@ errorIsr%1:
   push %1
   push fs
   jmp isr_default
+%endmacro
+
+%macro syscallisr 1
+global isr%1
+isr%1:
+  push 0
+  push %1
+  push fs
+  jmp isr_syscall
 %endmacro
 
 isr 0
@@ -192,7 +212,8 @@ isr 124
 isr 125
 isr 126
 isr 127
-isr 128
+; syscall
+syscallisr 128
 isr 129
 isr 130
 isr 131

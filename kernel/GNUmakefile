@@ -81,6 +81,7 @@ override SHARED_FLAGS := \
     -mfpmath=sse+387 \
     -Wno-error=type-limits \
     -Wno-error=missing-field-initializers \
+    -Wno-missing-field-initializers \
     -msse4.2 \
     -I./include \
     -I./include/libhydrix \

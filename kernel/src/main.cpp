@@ -438,6 +438,20 @@ extern void kernel_main() {
         StringObj devs = StringConcatenate("Device: ", PCIDevice2IDString(dev));
         PCIStrings.PushBack(devs);
     }
+    /*
+        Draw square
+        mov rax, 2
+        mov rbx, 4
+        mov rcx, 0
+        mov rdx, 0
+        mov rsi, 100
+        mov rdi, 100
+        mov r8, 0xFFFFFF
+        int 0x80
+        */
+    uint8_t progsimple[] = { 0x48, 0xC7, 0xC0, 0x02, 0x00, 0x00, 0x00, 0x48, 0xC7, 0xC3, 0x00, 0x00, 0x00, 0x00, 0xCD, 0x80 } ;
+    SimpleProgramFunc prog = (SimpleProgramFunc)progsimple;
+    int test = 0;
     while (true)
     {
         console.Clear();
@@ -450,8 +464,13 @@ extern void kernel_main() {
         {
             console.WriteLine(PCIStrings.At(i).c_str(), IColor::RGB(170, 255, 170));
         }
+
         DrawCursor();
+        //run prog
+        prog();
         graphics.Display();
+        
+        
     }
     halt();
 }

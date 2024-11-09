@@ -286,14 +286,14 @@ extern "C" void ISRHandler(registers_t *r) {
   if (r->isrNumber < 32) {
     uint64_t cr2;
     asm volatile(
-        "cli\n"
+        "cli\n" // Disable interrupts
         "mov %%cr2, %0"
         : "=a"(cr2));
-
+        HY_IDT_CONSOLE->Clear();
         HY_IDT_CONSOLE->WriteLine("--[BEGIN KERNEL PANIC]--", IColor::RGB(255, 0, 0));
         HY_IDT_CONSOLE->WriteLine("An exception has occured that the kernel cannot recover from.", IColor::RGB(255, 0, 0));
         HY_IDT_CONSOLE->WriteLine(StringConcatenate("Interrupt Number: ", ToString(r->isrNumber)), IColor::RGB(255, 0, 0));
-        HY_IDT_CONSOLE->WriteLine(StringConcatenate("Interrupt Error: ", exceptionMessages[r->isrNumber]), IColor::RGB(255, 0, 0));
+        HY_IDT_CONSOLE->WriteLine(StringConcatenate("Interrupt Error: ", (char*)exceptionMessages[r->isrNumber]), IColor::RGB(255, 0, 0));
         HY_IDT_CONSOLE->WriteLine(StringConcatenate("RIP: ", StringConcatenate("0x", ToHexNumberString(r->rip))), IColor::RGB(255, 0, 0));
         HY_IDT_CONSOLE->WriteLine(StringConcatenate("RSP: ", StringConcatenate("0x", ToHexNumberString(r->rsp))), IColor::RGB(255, 0, 0));
         HY_IDT_CONSOLE->WriteLine(StringConcatenate("RAX: ", StringConcatenate("0x", ToHexNumberString(r->rax))), IColor::RGB(255, 0, 0));
@@ -314,8 +314,6 @@ extern "C" void ISRHandler(registers_t *r) {
         HY_IDT_CONSOLE->WriteLine(StringConcatenate("CR2: ", StringConcatenate("0x", ToHexNumberString(cr2))), IColor::RGB(255, 0, 0));
         HY_IDT_CONSOLE->WriteLine("--[END KERNEL PANIC]--", IColor::RGB(255, 0, 0));
         HY_IDT_CONSOLE->graphics->Display();
-        asm volatile("cli");
-
     for (;;);
   }
   // After every interrupt send an EOI to the PICs or they will not send another interrupt again
