@@ -1,7 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include <stddef.h>
-#include <libhydrix/hmem/smem/heap.h>
+#include <libhydrix/hmem/smem/allocator.h>
 
 //include va list
 #include <stdarg.h>

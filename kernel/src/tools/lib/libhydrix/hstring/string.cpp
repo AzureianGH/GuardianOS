@@ -1,5 +1,5 @@
 #include <libhydrix/hstring/string.h>
-#include <libhydrix/hmem/smem/heap.h>
+#include <libhydrix/hmem/smem/allocator.h>
 
 size_t StringLength(const char* str) {
     size_t len = 0;

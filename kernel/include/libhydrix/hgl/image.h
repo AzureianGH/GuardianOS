@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <libhydrix/sdefs.h>
-#include <libhydrix/hmem/smem/heap.h>
+#include <libhydrix/hmem/smem/allocator.h>
 /// @brief Stretch an image
 /// @param image The image
 /// @param width The new width

@@ -1,7 +1,7 @@
 #include <libhydrix/hlow/cpu/cpuchecks.h>
 #include <stdint.h>
 #include <stddef.h>
-#include <libhydrix/hmem/smem/heap.h>
+#include <libhydrix/hmem/smem/allocator.h>
 void CPUSupport::CPUID(int code, unsigned int* a, unsigned int* b, unsigned int* c, unsigned int* d)
 {
     asm volatile("cpuid"

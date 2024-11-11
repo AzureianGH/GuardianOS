@@ -146,100 +146,9 @@ void testproc()
         RudamentaryWait(1000);
     }
 }
-BMPI rotate_bmpi(int deg, BMPI BMP_)
-{
-    BMPI BMP;
-    BMP.data = BMP_.data;
-    BMP.height = BMP_.height;
-    BMP.width = BMP_.width;
-    int* data = BMP.data;
-    int* newdata = (int*)KernelCleanAllocate(BMP.width * BMP.height * display.bpp / 8);
-    int newx = 0;
-    int newy = 0;
-    for (int y = 0; y < BMP.height; y++)
-    {
-        for (int x = 0; x < BMP.width; x++)
-        {
-            newx = x;
-            newy = y;
-            if (deg == 90)
-            {
-                newx = y;
-                newy = BMP.height - x;
-            }
-            else if (deg == 180)
-            {
-                newx = BMP.width - x;
-                newy = BMP.height - y;
-            }
-            else if (deg == 270)
-            {
-                newx = BMP.width - y;
-                newy = x;
-            }
-            newdata[newy * BMP.width + newx] = data[y * BMP.width + x];
-        }
-    }
-    BMP.data = newdata;
-    return BMP;
-}
 
-//reboot the bad way
-void TripleFault()
-{
-    //idt reg set to null
-    idt_register_t idt_reg;
-    idt_reg.base = 0;
-    idt_reg.limit = 0;
-    //lidt
-
-    asm volatile("lidtq %0" : "=m"(idt_reg));
-}
 typedef void (*SimpleProgramFunc)();
-void read_bytes(const uint8_t* src, void* dest, size_t n) {
-    for (size_t i = 0; i < n; ++i) {
-        ((uint8_t*)dest)[i] = src[i];
-    }
-}
 
-void play(uint64_t freq)
-{
-    uint64_t divisor = 1193180 / freq;
-
-    PortIO::OutByte(0x43, 0xB6);
-
-    uint8_t l = static_cast<uint8_t>(divisor);
-    uint8_t h = static_cast<uint8_t>(divisor >> 8);
-
-    PortIO::OutByte(0x42, l);
-    PortIO::OutByte(0x42, h);
-
-    PortIO::OutByte(0x61, PortIO::InByte(0x61) | 0x3);
-}
-
-void stop()
-{
-    PortIO::OutByte(0x61, PortIO::InByte(0x61) & 0xFC);
-}
-
-void beep(uint64_t freq, uint64_t msec)
-{
-
-    play(freq);
-    PITSleepMS(msec);
-    stop();
-}
-void PrintAvailableResolutions(limine_framebuffer* framebuffer)
-{
-    uint64_t Count = framebuffer->mode_count;
-    limine_video_mode** modes = framebuffer->modes;
-    for (uint64_t i = 0; i < Count; i++)
-    {
-        limine_video_mode* mode = modes[i];
-        console.WriteLine(ThreeStringConcatenate(StringConcatenate(ThreeStringConcatenate("Resolution: ", ToString(mode->width), "x"), ToString(mode->height)), "x", ToString(mode->bpp)), IColor::RGB(170, 255, 170));
-        
-    }
-}
 
 void DrawCursor()
 {
@@ -268,23 +177,10 @@ void DrawCursor()
     graphics.DrawLine(mx + 6, my + 13, mx + 6, my + 14, 0x0f141c);
 }
 
-void DrawPixelWithAlpha(int x, int y, int color, float alpha) {
-        // Assuming you have a function to draw a pixel with alpha blending
-        int r = (color >> 16) & 0xFF;
-        int g = (color >> 8) & 0xFF;
-        int b = color & 0xFF;
 
-        // Blend the color with the existing pixel color here
-        // Example:
-        int existingColor = graphics.GetPixel(x, y);
-        int existingR = (existingColor >> 16) & 0xFF;
-        int existingG = (existingColor >> 8) & 0xFF;
-        int existingB = existingColor & 0xFF;
-        int newR = (int)((r * alpha) + (existingR * (1 - alpha)));
-        int newG = (int)((g * alpha) + (existingG * (1 - alpha)));
-        int newB = (int)((b * alpha) + (existingB * (1 - alpha)));
-        graphics.DrawPixel(x, y, (newR << 16) | (newG << 8) | newB);
-};
+limine_memmap_response *limine_memmap_us; 
+limine_hhdm_response *hhdm_memmap;
+
 extern void kernel_main() {
     
     
@@ -308,18 +204,17 @@ extern void kernel_main() {
     FPU::Enable();
     // Fetch the first framebuffer.
     limine_framebuffer *framebuffer = framebuffer_request.response->framebuffers[0];
-    limine_memmap_response *memmap = memmap_request.response;
-    limine_hhdm_response *hhdm = hhdm_request.response;
-    uint64_t offsetofhhdm = hhdm->offset;
+    limine_memmap_us = memmap_request.response;
+    hhdm_memmap = hhdm_request.response;
     //memory in bytes from memmap
-    size_t memsize = RetrieveTotalMemory(memmap);
+    size_t memsize = RetrieveTotalMemory(limine_memmap_us);
     display.width = framebuffer->width;
     display.height = framebuffer->height;
     display.bpp = framebuffer->bpp;
     display.address = framebuffer->address;
     //one after the framebuffer
     //heap_init the offset of hhdm
-    InitializeHeap(offsetofhhdm);
+    InitializeAllocator();
     string* InitFailures = new string[100];
     graphics.Init((uint32_t*)framebuffer->address, framebuffer->width, framebuffer->height, framebuffer->pitch, framebuffer->bpp, framebuffer->red_mask_shift, framebuffer->green_mask_shift, framebuffer->blue_mask_shift, framebuffer->red_mask_size, framebuffer->green_mask_size, framebuffer->blue_mask_size);
     
@@ -404,7 +299,6 @@ extern void kernel_main() {
     console.WriteLine(StringConcatenate("Framebuffer Count: ", ToString(framebuffer_request.response->framebuffer_count)), IColor::RGB(170, 255, 170));
     //print memory size in MB
     console.WriteLine(ThreeStringConcatenate("Memory Size: ", ToString(memsize / 1024 / 1024), " MB"), IColor::RGB(170, 255, 170));
-    PrintAvailableResolutions(framebuffer);
     //capture
     graphics.Display();
     #ifndef SKIP_BOOT_WAIT
@@ -413,23 +307,16 @@ extern void kernel_main() {
     graphics.Clear();
     console.ClearS();
     console.allow_typing = false;
-    BMPA Cursor;
-    Cursor.data = (long*)cnormal;
-    Cursor.height = CNORMAL_HEIGHT;
-    Cursor.width = CNORMAL_WIDTH;
-    BMPI BGImg;
-    BGImg.data = (int*)OSBG;
-    BGImg.height = OSBG_HEIGHT;
-    BGImg.width = OSBG_WIDTH;
     
-    char* memesizzze = ToString(memsize);
-    BMPI Stretched = *StretchImage(&BGImg, display.width, display.height);
+    graphics.SetHz(200);
 
+
+    
     /// #########
     /// # START #
     /// #########
     Taskbar taskbar(&graphics);
-    graphics.SetHz(200);
+    
     Vector<pci_device_t> Testing = PCIGetDevices();
     Vector<StringObj> PCIStrings;
     for (int i = 0; i < Testing.Length(); i++)
@@ -438,20 +325,7 @@ extern void kernel_main() {
         StringObj devs = StringConcatenate("Device: ", PCIDevice2IDString(dev));
         PCIStrings.PushBack(devs);
     }
-    /*
-        Draw square
-        mov rax, 2
-        mov rbx, 4
-        mov rcx, 0
-        mov rdx, 0
-        mov rsi, 100
-        mov rdi, 100
-        mov r8, 0xFFFFFF
-        int 0x80
-        */
-    uint8_t progsimple[] = { 0x48, 0xC7, 0xC0, 0x02, 0x00, 0x00, 0x00, 0x48, 0xC7, 0xC3, 0x00, 0x00, 0x00, 0x00, 0xCD, 0x80 } ;
-    SimpleProgramFunc prog = (SimpleProgramFunc)progsimple;
-    int test = 0;
+
     while (true)
     {
         console.Clear();
@@ -464,13 +338,15 @@ extern void kernel_main() {
         {
             console.WriteLine(PCIStrings.At(i).c_str(), IColor::RGB(170, 255, 170));
         }
-
         DrawCursor();
-        //run prog
-        prog();
+
+        
+
         graphics.Display();
+        
         
         
     }
     halt();
+   halt();
 }

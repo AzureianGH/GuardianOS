@@ -1,5 +1,5 @@
 #include <libhydrix/hgl/color.h>
-#include <libhydrix/hmem/smem/heap.h>
+#include <libhydrix/hmem/smem/allocator.h>
 int IColor::RGB(int r, int g, int b) {
     return (r << 16) | (g << 8) | b;
 }

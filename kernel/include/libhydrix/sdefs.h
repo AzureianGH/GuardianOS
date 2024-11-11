@@ -1,7 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include <stddef.h>
-#include <libhydrix/hmem/smem/heap.h>
+#include <libhydrix/hmem/smem/allocator.h>
 /// @brief A function pointer that can accept any amount of arguments and return any type.
 typedef void (*function_pointer)();
 /// @brief Basic handle in general.

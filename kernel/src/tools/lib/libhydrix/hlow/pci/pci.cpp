@@ -1,6 +1,6 @@
 #include <libhydrix/hlow/pci/pci.h>
 #include <libhydrix/hio/io.h>
-#include <libhydrix/hmem/smem/heap.h>
+#include <libhydrix/hmem/smem/allocator.h>
 #include <libhydrix/hcon/console.h>
 #include <stdint.h>
 #include <libhydrix/sdefs.h>

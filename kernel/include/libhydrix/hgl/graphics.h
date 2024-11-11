@@ -6,7 +6,7 @@
 #include <libhydrix/hmath/floatmath.h>
 #include <libhydrix/hstring/string.h>
 #include <libhydrix/sdefs.h>
-#include <libhydrix/hmem/smem/heap.h>
+#include <libhydrix/hmem/smem/allocator.h>
 #include "fonts.h"
 #include <stdint.h>
 #include <stddef.h>

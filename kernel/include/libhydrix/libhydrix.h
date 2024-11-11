@@ -22,7 +22,7 @@
 #include <libhydrix/hmath/floatmath.h>
 #include <libhydrix/hmath/higherbitmath.h>
 #include <libhydrix/hmath/intmath.h>
-#include <libhydrix/hmem/smem/heap.h>
+#include <libhydrix/hmem/smem/allocator.h>
 #include <libhydrix/hmem/smem/smem.h>
 #include <libhydrix/hmouse/mouse.h>
 #include <libhydrix/hrand/rand.h>
@@ -34,3 +34,5 @@
 #include <libhydrix/hgl/image.h>
 #include <libhydrix/hlow/cpu/cpuchecks.h>
 #include <libhydrix/hfile/ahci.h>
+#include <libhydrix/hgl/color.h>
+#include <libhydrix/hlow/usermode/usermode.h>

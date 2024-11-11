@@ -1,3 +1,6 @@
+section .data
+    syscallhelper dq 0
+
 section .text
 
 %macro pushall 0
@@ -38,6 +41,85 @@ pop rax
 
 extern ISRHandler ; Returns void
 extern ISRHandlerSyscall ; Returns void
+extern _InvokableUsermodeEntry
+
+global begin_usermode
+global setup_syscall_sysret
+global syscall_entry
+
+setup_syscall_sysret:
+    ; Load the segment selectors into STAR
+    ; STAR layout: [63:48] = user CS | [47:32] = kernel CS (user DS is CS+8 for 64-bit)
+    ; Kernel CS = 0x10, User CS = 0x20, so STAR = ((0x20 << 48) | (0x10 << 32))
+    mov ecx, 0xC0000081      ; MSR_STAR
+    mov rax, (0x20 << 48) | (0x10 << 32)
+    wrmsr
+
+    ; Set the LSTAR MSR to point to the syscall handler entry point
+    mov ecx, 0xC0000082      ; MSR_LSTAR
+    lea rax, [rel syscall_entry] ; Address of syscall entry point
+    wrmsr
+
+    ; Set the SFMASK MSR to clear certain flags (e.g., IF for interrupts)
+    mov ecx, 0xC0000084      ; MSR_SFMASK
+    mov rax, 1 << 9          ; Clear IF (interrupt flag) on syscall entry
+    wrmsr
+
+    ret
+  
+syscall_entry:
+    ; Save registers
+    push rdi
+    push rsi
+    push rdx
+    push r10
+    push r8
+    push r9
+    push rax
+    
+    ; Call the actual syscall handler
+    mov rdi, rsp
+    call ISRHandlerSyscall
+    
+    ; Restore registers and prepare for sysret
+    pop rax
+    pop r9
+    pop r8
+    pop r10
+    pop rdx
+    pop rsi
+    pop rdi
+
+    ; Set up sysret return to user mode
+    mov rcx, [rsp]       ; Restore user RIP from stack
+    add rsp, 8           ; Move stack pointer
+    sysretq              ; Return to user mode
+; This label marks the entry point for the user-mode transition
+begin_usermode:
+    ; Load user data segment selector
+    mov ax, 0x20
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+
+    ; Set the user-mode stack pointer (top of user stack)
+    
+
+    ; Prepare the stack for iretq to enter user mode
+    push 0x20              ; User data segment selector (SS)
+    push rsp               ; User stack pointer
+    pushfq                 ; RFLAGS
+    push 0x28              ; User code segment selector (CS)
+
+    ; Calculate relative address for _InvokableUsermodeEntry
+    lea rax, [rel _InvokableUsermodeEntry]
+    push rax               ; RIP - User mode entry point
+
+    ; Use iretq to pop the above values and enter user mode
+    iretq
+
+
 isr_default:
   cli
   pushall
@@ -53,8 +135,10 @@ isr_syscall: ; ISRHandlerSyscall returns a number into rax
   pushall
   mov rdi, rsp
   call ISRHandlerSyscall
+  mov [rel syscallhelper], rax
   popall
   add rsp, 24
+  mov rax, [rel syscallhelper]
   sti
   iretq
 
