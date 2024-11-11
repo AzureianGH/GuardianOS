@@ -88,6 +88,13 @@ volatile limine_smbios_request smbios_request = {
     .response = nullptr
 };
 
+__attribute__((used, section(".requests")))
+volatile limine_kernel_address_request kernel_address_request = {
+    .id = LIMINE_KERNEL_ADDRESS_REQUEST,
+    .revision = 0,
+    .response = nullptr
+};
+
 }
 
 namespace {
@@ -180,6 +187,9 @@ void DrawCursor()
 
 limine_memmap_response *limine_memmap_us; 
 limine_hhdm_response *hhdm_memmap;
+limine_kernel_address_response *kernel_address_response;
+extern uint64_t kernel_start;
+extern uint64_t kernel_end;
 
 extern void kernel_main() {
     
@@ -206,15 +216,19 @@ extern void kernel_main() {
     limine_framebuffer *framebuffer = framebuffer_request.response->framebuffers[0];
     limine_memmap_us = memmap_request.response;
     hhdm_memmap = hhdm_request.response;
+    kernel_address_response = kernel_address_request.response;
     //memory in bytes from memmap
     size_t memsize = RetrieveTotalMemory(limine_memmap_us);
     display.width = framebuffer->width;
     display.height = framebuffer->height;
     display.bpp = framebuffer->bpp;
     display.address = framebuffer->address;
-    //one after the framebuffer
-    //heap_init the offset of hhdm
-    InitializeAllocator();
+    
+    InitializeHeap(hhdm_memmap->offset);
+
+    
+   
+
     string* InitFailures = new string[100];
     graphics.Init((uint32_t*)framebuffer->address, framebuffer->width, framebuffer->height, framebuffer->pitch, framebuffer->bpp, framebuffer->red_mask_shift, framebuffer->green_mask_shift, framebuffer->blue_mask_shift, framebuffer->red_mask_size, framebuffer->green_mask_size, framebuffer->blue_mask_size);
     
@@ -338,10 +352,9 @@ extern void kernel_main() {
         {
             console.WriteLine(PCIStrings.At(i).c_str(), IColor::RGB(170, 255, 170));
         }
+        console.WriteLine(((StringObj)"Used Memory: " + (GetTotalUsedMem() / 1024) + " MB").c_str(), IColor::RGB(170, 255, 170));
+        console.WriteLine(((StringObj)"Used Memory: " + (GetUsedListCount()) + " MB").c_str(), IColor::RGB(170, 255, 170));
         DrawCursor();
-
-        
-
         graphics.Display();
         
         

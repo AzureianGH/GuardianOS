@@ -18,11 +18,11 @@ PHDRS
 
 SECTIONS
 {
-    /* We wanna be placed in the topmost 2GiB of the address space, for optimisations */
-    /* and because that is what the Limine spec mandates. */
-    /* Any address in this region will do, but often 0xffffffff80000000 is chosen as */
-    /* that is the beginning of the region. */
+    /* We want to place the kernel in the topmost 2GiB of the address space */
     . = 0xffffffff80000000;
+
+    /* Define kernel start symbol */
+    kernel_start = .;
 
     /* Define a section to contain the Limine requests and assign it to its own PHDR */
     .requests : {
@@ -45,8 +45,7 @@ SECTIONS
         *(.rodata .rodata.*)
     } :rodata
 
-    /* C++ is a language that allows for global constructors. In order to obtain the */
-    /* address of the ".init_array" section we need to define a symbol for it. */
+    /* Define init_array section for global constructors */
     .init_array : {
         __init_array = .;
         *(.init_array .init_array.*)
@@ -60,21 +59,21 @@ SECTIONS
         *(.data .data.*)
     } :data
 
-    /* Dynamic section for relocations, both in its own PHDR and inside data PHDR */
+    /* Dynamic section for relocations */
     .dynamic : {
         *(.dynamic)
     } :data :dynamic
 
-    /* NOTE: .bss needs to be the last thing mapped to :data, otherwise lots of */
-    /* unnecessary zeros will be written to the binary. */
-    /* If you need, for example, .init_array and .fini_array, those should be placed */
-    /* above this. */
+    /* BSS section (uninitialized data) */
     .bss : {
         *(.bss .bss.*)
         *(COMMON)
     } :data
 
-    /* Discard .note.* and .eh_frame since they may cause issues on some hosts. */
+    /* Define kernel end symbol */
+    kernel_end = .;
+
+    /* Discard .note and .eh_frame sections */
     /DISCARD/ : {
         *(.eh_frame)
         *(.note .note.*)
