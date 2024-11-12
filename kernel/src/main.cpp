@@ -224,7 +224,7 @@ extern void kernel_main() {
     display.bpp = framebuffer->bpp;
     display.address = framebuffer->address;
     
-    InitializeHeap(hhdm_memmap->offset);
+    InitializeHeap(hhdm_memmap->offset, memsize - hhdm_memmap->offset);
 
     
    
@@ -339,7 +339,6 @@ extern void kernel_main() {
         StringObj devs = StringConcatenate("Device: ", PCIDevice2IDString(dev));
         PCIStrings.PushBack(devs);
     }
-
     while (true)
     {
         console.Clear();
@@ -352,14 +351,17 @@ extern void kernel_main() {
         {
             console.WriteLine(PCIStrings.At(i).c_str(), IColor::RGB(170, 255, 170));
         }
-        console.WriteLine(((StringObj)"Used Memory: " + (GetTotalUsedMem() / 1024) + " MB").c_str(), IColor::RGB(170, 255, 170));
-        console.WriteLine(((StringObj)"Used Memory: " + (GetUsedListCount()) + " MB").c_str(), IColor::RGB(170, 255, 170));
+        console.WriteLine(((StringObj)"Used Memory: " + (GetTotalUsedMem())).c_str(), IColor::RGB(170, 255, 170));
+        console.WriteLine(((StringObj)"Used Memory: " + ToString(((float)GetTotalUsedMem()/(float)(memsize - hhdm_memmap->offset))* 100) + "% Used").c_str(), IColor::RGB(170, 255, 170));
+        console.WriteLine(((StringObj)"Last Alloc Address: " + ToHexNumberString(MemoryAllocationDebugger::GetAddressOfLastAllocation())).c_str(), IColor::RGB(170, 255, 170));
+        console.WriteLine(((StringObj)"Last Free Address: " + ToHexNumberString(MemoryAllocationDebugger::GetAddressOfLastFree())).c_str(), IColor::RGB(170, 255, 170));
+        //console.WriteLine(((StringObj)"BAR0: " + things[0]).c_str(), IColor::RGB(170, 255, 170));
+        PCIGetIDEBars(&console);
         DrawCursor();
         graphics.Display();
-        
+        CleanHeap();
         
         
     }
     halt();
-   halt();
 }

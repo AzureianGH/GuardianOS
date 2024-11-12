@@ -59,7 +59,7 @@ typedef struct {
 } pci_bar_t;
 
 void pci_get_bar(pci_bar_t *bar, uint32_t id, uint32_t index);
-
+pci_bar_t *PCIGetIDEBars(Console* console);
 /* I/O Ports */
 #define PCI_PORT_ADDR   0xCF8
 #define PCI_PORT_DATA   0xCFC

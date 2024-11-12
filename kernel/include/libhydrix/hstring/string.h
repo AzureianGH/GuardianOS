@@ -190,6 +190,104 @@ public:
     explicit operator const char*() const {
         return str;
     }
+
+    bool IsEmpty() const {
+        return len == 0;
+    }
+
+    bool StartsWith(const char* prefix) const {
+        // loop through each char and compare
+        for (size_t i = 0; i < StringLength(prefix); i++) {
+            //check if the string still has length
+            if (i >= len) {
+                return false;
+            }
+            if (str[i] != prefix[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool EndsWith(const char* suffix) const {
+        size_t suffixLen = StringLength(suffix);
+        if (suffixLen > len) {
+            return false;
+        }
+        for (size_t i = 0; i < suffixLen; i++) {
+            if (str[len - suffixLen + i] != suffix[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // Find a substring
+    int Find(const char* substr) const {
+        size_t substrLen = StringLength(substr);
+        for (size_t i = 0; i < len - substrLen; i++) {
+            bool found = true;
+            for (size_t j = 0; j < substrLen; j++) {
+                if (str[i + j] != substr[j]) {
+                    found = false;
+                    break;
+                }
+            }
+            if (found) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    StringObj Substring(size_t start, size_t length) const {
+        if (start + length > len) {
+            return "";
+        }
+        char* newStr = (char*)KernelAllocate(length + 1);
+        for (size_t i = 0; i < length; i++) {
+            newStr[i] = str[start + i];
+        }
+        newStr[length] = '\0';
+        StringObj result(newStr);
+        KernelFree(newStr);
+        return result;
+    }
+
+    // Split a string
+    StringObj* Split(const char* delimiter, int* count) const {
+        int numDelimiters = 0;
+        int* delimiterIndices = (int*)KernelAllocate(len * sizeof(int));
+        for (size_t i = 0; i < len - StringLength(delimiter); i++) {
+            bool found = true;
+            for (size_t j = 0; j < StringLength(delimiter); j++) {
+                if (str[i + j] != delimiter[j]) {
+                    found = false;
+                    break;
+                }
+            }
+            if (found) {
+                delimiterIndices[numDelimiters++] = i;
+            }
+        }
+        *count = numDelimiters + 1;
+        StringObj* result = (StringObj*)KernelAllocate((*count) * sizeof(StringObj));
+        for (int i = 0; i < *count; i++) {
+            size_t start = i == 0 ? 0 : delimiterIndices[i - 1] + StringLength(delimiter);
+            size_t length = i == *count - 1 ? len - start : delimiterIndices[i] - start;
+            result[i] = Substring(start, length);
+        }
+        KernelFree(delimiterIndices);
+        return result;
+    }
+
+    bool Contains(const char* substr) const {
+        return Find(substr) != -1;
+    }
+
+    
+
+    // C string
     char* c_str() {
         string newStr = (string)KernelAllocate(len + 1);
         StringCopy(newStr, str);

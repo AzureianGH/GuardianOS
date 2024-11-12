@@ -33,6 +33,8 @@
 #include <libhydrix/hlow/pci/pci.h>
 #include <libhydrix/hgl/image.h>
 #include <libhydrix/hlow/cpu/cpuchecks.h>
-#include <libhydrix/hfile/ahci.h>
 #include <libhydrix/hgl/color.h>
 #include <libhydrix/hlow/usermode/usermode.h>
+#include <libhydrix/hfile/ahci.h>
+#include <libhydrix/hfile/ata.h>
+#include <libhydrix/hfile/ide.h>

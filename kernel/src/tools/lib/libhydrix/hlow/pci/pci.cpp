@@ -4,6 +4,7 @@
 #include <libhydrix/hcon/console.h>
 #include <stdint.h>
 #include <libhydrix/sdefs.h>
+#include <libhydrix/hmem/smem/smem.h>
 
 #define MAX_BUS                 1
 #define MAX_DEVICE              32
@@ -17,7 +18,7 @@ static void pci_scan_device(uint8_t bus_id, uint8_t dev_id);
 
 static pci_device_desc_t device_table[] =
 {
-        {0x0010, 0x8139, "AT-2500TX V3 Ethernet"},
+    {0x0010, 0x8139, "AT-2500TX V3 Ethernet"},
     {0x0014, 0x7a00, "Hyper Transport Bridge Controller"},
     {0x0014, 0x7a02, "APB (Advanced Peripheral Bus) Controller"},
     {0x0014, 0x7a03, "Gigabit Ethernet Controller"},
@@ -35684,6 +35685,8 @@ void pci_get_bar(pci_bar_t *bar, uint32_t id, uint32_t index)
     }
 }
 
+
+
 uint8_t pci_inb(uint32_t id, uint32_t offset)
 {
     uint32_t address = 0x80000000 | id | (offset & 0xFC);
@@ -35867,3 +35870,42 @@ void PCIList(Console* console)
     }
 }
 
+pci_bar_t* PCIGetIDEBars(Console* console)
+{
+    // use PCI_STORAGE_IDE and get BARs
+    pci_bar_t* bars = (pci_bar_t*)KernelAllocate(sizeof(pci_bar_t) * 4);
+    // look for Intel's 82371AB/EB/MB PIIX4 IDE
+    for (size_t i = 0; i < pci_devices.Length(); i++) {
+        pci_device_t dev = pci_devices.At(i);
+        console->WriteLine(((StringObj)"Device ID: " + ToHexNumberString(dev.device_id) + " Vendor ID: " + ToHexNumberString(dev.vendor_id)).c_str());
+        if (dev.device_id == 0x7111 && dev.vendor_id == 0x8086)
+        {
+            
+            for (size_t j = 0; j < 4; j++) {
+                console->WriteLine("Bar");
+                pci_get_bar(&bars[j], PCI_MAKE_DEVICE_ID(&dev), j);
+            }
+            return bars;
+        }
+    }
+    return nullptr;
+}
+
+/*
+typedef struct [[gnu::packed]] {
+    int64_t parent;
+    uint8_t bus;
+    uint8_t func;
+    uint8_t device;
+    uint16_t device_id;
+    uint16_t vendor_id;
+    uint8_t rev_id;
+    uint8_t subclass;
+    uint8_t device_class;
+    uint8_t prog_if;
+    int multifunction;
+    uint8_t irq_pin;
+    int has_prt;
+    uint32_t gsi;
+    uint16_t gsi_flags;
+} pci_device_t;*/

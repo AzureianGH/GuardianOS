@@ -33,6 +33,15 @@ void PortIO::OutLong(uint16_t port, uint32_t data) {
     __asm__ __volatile__("outl %0, %1" : : "a"(data), "Nd"(port));
 }
 
+//PortIO::InSL and PortIO::OutSL
+void PortIO::InSL(uint16_t port, void* buffer, uint32_t count) {
+    __asm__ __volatile__("rep insb" : "+D"(buffer), "+c"(count) : "d"(port) : "memory");
+}
+
+void PortIO::OutSL(uint16_t port, void* buffer, uint32_t count) {
+    __asm__ __volatile__("rep outsb" : "+S"(buffer), "+c"(count) : "d"(port) : "memory");
+}
+
 //ioPITWait
 void PortIO::IoPITWait(void) {
     InByte(0x80);

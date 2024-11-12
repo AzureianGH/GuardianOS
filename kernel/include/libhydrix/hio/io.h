@@ -28,6 +28,16 @@ class PortIO
     /// @brief Write a double word to a port
     /// @param port The port
     static void OutLong(uint16_t port, uint32_t data);
+    /// @brief Read a byte from a port with string load
+    /// @param port The port
+    /// @param buffer The buffer to read into
+    /// @param count The number of bytes to read
+    static void InSL(uint16_t port, void* buffer, uint32_t count);
+    /// @brief Write a byte to a port with string store
+    /// @param port The port
+    /// @param buffer The buffer to write from
+    /// @param count The number of bytes to write
+    static void OutSL(uint16_t port, void* buffer, uint32_t count);
     /// @brief PITWait for I/O to complete
     static void IoPITWait(void);
 };

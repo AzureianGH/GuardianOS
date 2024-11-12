@@ -205,6 +205,18 @@ public:
     {
         return data[index];
     }
+
+    // Iterator support
+    T* begin()
+    {
+        return data;
+    }
+
+    T* end()
+    {
+        return data + len;
+    }
+
 private:
     size_t len;
     size_t capacity;
