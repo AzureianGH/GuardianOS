@@ -6,6 +6,7 @@
 #include <libhydrix/sdefs.h>
 #include <libhydrix/hmem/smem/smem.h>
 
+
 #define MAX_BUS                 1
 #define MAX_DEVICE              32
 #define MAX_FUNCTION            8
@@ -35628,7 +35629,7 @@ const char *PCIDevice2IDString(pci_device_t device)
     for(uint64_t i = 0; ; i++) {
         /* Reach the last line */
         if (device_table[i].vendor_id == 0) {
-            return unknown_device_desc;
+            return ((StringObj)"Unknown device: Vendor ID: " + ToHexNumberString(device.vendor_id) + ", Device ID: " + ToHexNumberString(device.device_id)).c_str();
         }
         if (device_table[i].vendor_id == device.vendor_id) {
             if (device_table[i].device_id == device.device_id) {
@@ -35869,26 +35870,61 @@ void PCIList(Console* console)
         console->WriteLine(((StringObj)"Bus: " + dev.bus + " Device: " + dev.device + " Func: " + dev.func + " Vendor ID: " + ToHexNumberString(dev.vendor_id) + " IRQ Pin: " + ToHexNumberString(dev.irq_pin) + " Desc: " + PCIDevice2IDString(dev)).c_str());
     }
 }
+#define MAX_BARS 6
 
-pci_bar_t* PCIGetIDEBars(Console* console)
+
+
+Vector<ide_controller_t> PCIGetIDEBars()
 {
-    // use PCI_STORAGE_IDE and get BARs
-    pci_bar_t* bars = (pci_bar_t*)KernelAllocate(sizeof(pci_bar_t) * 4);
-    // look for Intel's 82371AB/EB/MB PIIX4 IDE
+    Vector<ide_controller_t> ide_controllers;
+
+    // Iterate over all PCI devices
     for (size_t i = 0; i < pci_devices.Length(); i++) {
-        pci_device_t dev = pci_devices.At(i);
-        console->WriteLine(((StringObj)"Device ID: " + ToHexNumberString(dev.device_id) + " Vendor ID: " + ToHexNumberString(dev.vendor_id)).c_str());
-        if (dev.device_id == 0x7111 && dev.vendor_id == 0x8086)
-        {
-            
-            for (size_t j = 0; j < 4; j++) {
-                console->WriteLine("Bar");
-                pci_get_bar(&bars[j], PCI_MAKE_DEVICE_ID(&dev), j);
+        pci_device_t device = pci_devices.At(i);
+
+        // Check if the device is an IDE controller
+        if (pci_read_class(&device) == 0x01 && pci_read_subclass(&device) == 0x01) {
+            ide_controller_t ide_controller;
+            ide_controller.device = device;
+
+            // Retrieve each BAR for the IDE controller
+            for (uint32_t bar_index = 0; bar_index < MAX_BARS; bar_index++) {
+                pci_bar_t bar;
+                pci_get_bar(&bar, PCI_MAKE_DEVICE_ID(&device), bar_index);
+                ide_controller.bars[bar_index] = bar;
             }
-            return bars;
+
+            // Store the IDE controller with its BARs
+            ide_controllers.PushBack(ide_controller);
         }
     }
-    return nullptr;
+
+    return ide_controllers;
+}
+
+// Debug function to print out BAR details for IDE controllers
+void PrintIDEBars(Console* console)
+{
+    Vector<ide_controller_t> ide_controllers = PCIGetIDEBars();
+
+    for (size_t i = 0; i < ide_controllers.Length(); i++) {
+        ide_controller_t ide_ctrl = ide_controllers.At(i);
+        console->WriteLine(((StringObj)"IDE Controller at Bus: " + ide_ctrl.device.bus +
+                            " Device: " + ide_ctrl.device.device + " Func: " +
+                            ide_ctrl.device.func + " Vendor ID: " +
+                            ToHexNumberString(ide_ctrl.device.vendor_id)).c_str());
+
+        for (int bar_index = 0; bar_index < MAX_BARS; bar_index++) {
+            pci_bar_t bar = ide_ctrl.bars[bar_index];
+
+            if (bar.size > 0) { // Check if the BAR is valid
+                console->WriteLine(((StringObj)" BAR " + bar_index + ": Address " +
+                                    ToHexNumberString((uintptr_t)bar.u.address) +
+                                    ", Size " + ToHexNumberString(bar.size) +
+                                    ", Flags " + ToHexNumberString((uint64_t)bar.flags)).c_str());
+            }
+        }
+    }
 }
 
 /*

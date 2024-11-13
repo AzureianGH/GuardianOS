@@ -285,7 +285,7 @@ void Graphics::DisplayLockedSynced() {
 }
 
 void Graphics::DisplayNonSynced() {
-    // No sync, display immediately
+    // No sync, display immediately, useful if interrupts are disabled
     memcpy(FrameBuffer, SwapBuffer, CachedWHB8);
 }
 

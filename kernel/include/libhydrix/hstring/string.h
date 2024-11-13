@@ -78,6 +78,16 @@ char* ToHexNumberString(int value);
 /// @param buffer The buffer
 /// @return The string in hex
 char* ToHexNumberString(uint64_t value);
+/// @brief Convert a unsigned char to a string
+/// @param value The unsigned char
+/// @param buffer The buffer
+/// @return The string in hex
+char* ToHexNumberString(uint8_t value);
+/// @brief Convert a unsigned short to a string
+/// @param value The unsigned short
+/// @param buffer The buffer
+/// @return The string in hex
+char* ToHexNumberString(uint16_t value);
 /// @brief Convert an integer to char
 /// @param value The integer
 /// @return The char

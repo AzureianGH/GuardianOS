@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+
 #include <libhydrix/hcon/console.h>
 #define PCI_MAKE_ID(b, d, f)    ((b) << 16) | ((d) << 11) | ((f) << 8)
 #define PCI_MAKE_DEVICE_ID(dev) ((((dev)->bus) << 16) |       \
@@ -57,9 +58,13 @@ typedef struct {
     uint64_t size;
     uint32_t flags;
 } pci_bar_t;
-
+typedef struct {
+    pci_device_t device;
+    pci_bar_t bars[6];
+} ide_controller_t;
 void pci_get_bar(pci_bar_t *bar, uint32_t id, uint32_t index);
-pci_bar_t *PCIGetIDEBars(Console* console);
+Vector<ide_controller_t> PCIGetIDEBars();
+void PrintIDEBars(Console* console);
 /* I/O Ports */
 #define PCI_PORT_ADDR   0xCF8
 #define PCI_PORT_DATA   0xCFC

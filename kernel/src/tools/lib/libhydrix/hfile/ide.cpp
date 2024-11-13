@@ -7,7 +7,9 @@ volatile unsigned static char ide_irq_invoked = 0;
 unsigned static char atapi_packet[12] = {0xA8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 IDEChannelRegisters channels[2];
-
+void SetIDEConsole(Console* console) {
+    ErrrConsole = console;
+}
 void ide_write(unsigned char channel, unsigned char reg, unsigned char data) {
    if (reg > 0x07 && reg < 0x0C)
       ide_write(channel, ATA_REG_CONTROL, 0x80 | channels[channel].nIEN);
@@ -137,7 +139,7 @@ void ide_read_buffer(unsigned char channel, unsigned char reg, unsigned char* bu
       ide_write(channel, ATA_REG_CONTROL, channels[channel].nIEN);
 }
 
-void ide_initialize(unsigned int BAR0, unsigned int BAR1, unsigned int BAR2, unsigned int BAR3, unsigned int BAR4) {
+void IDEInit(unsigned int BAR0, unsigned int BAR1, unsigned int BAR2, unsigned int BAR3, unsigned int BAR4) {
 
    int j, k, count = 0;
 
@@ -152,6 +154,10 @@ void ide_initialize(unsigned int BAR0, unsigned int BAR1, unsigned int BAR2, uns
    ide_write(ATA_PRIMARY  , ATA_REG_CONTROL, 2);
    ide_write(ATA_SECONDARY, ATA_REG_CONTROL, 2);
  // 3- Detect ATA-ATAPI Devices:
+   ErrrConsole->Clear();
+   ErrrConsole->WriteLine("Detecting IDE Devices");
+   ErrrConsole->graphics->DisplayNonSynced();
+
    for (int i = 0; i < 2; i++)
       for (j = 0; j < 2; j++) {
 
@@ -160,11 +166,20 @@ void ide_initialize(unsigned int BAR0, unsigned int BAR1, unsigned int BAR2, uns
 
          // (I) Select Drive:
          ide_write(i, ATA_REG_HDDEVSEL, 0xA0 | (j << 4)); // Select Drive.
-         PITSleepMS(1); // Wait 1ms for drive select to work.
+         int timer = TimeSinceBootMS();
+         while (TimeSinceBootMS() < timer); // Wait 1ms for drive select to work.
 
          // (II) Send ATA Identify Command:
          ide_write(i, ATA_REG_COMMAND, ATA_CMD_IDENTIFY);
-         PITSleepMS(1); // This function should be implemented in your OS. which waits for 1 ms.
+         //USe TimeSinceBootMS(); to wait exactly 1 ms by comparing the time
+
+         int timer2 = TimeSinceBootMS();
+         while (TimeSinceBootMS() < timer2); // This method avoids the use of PIT Timer since IRQs got disabled.
+
+         ErrrConsole->WriteLine("Waiting for 1 ms");
+         ErrrConsole->graphics->DisplayNonSynced();
+         
+          // This function should be implemented in your OS. which waits for 1 ms.
                    // it is based on System Timer Device Driver.
 
          // (III) Polling:
@@ -190,7 +205,8 @@ void ide_initialize(unsigned int BAR0, unsigned int BAR1, unsigned int BAR2, uns
                continue; // Unknown Type (may not be a device).
 
             ide_write(i, ATA_REG_COMMAND, ATA_CMD_IDENTIFY_PACKET);
-            PITSleepMS(1);
+            int timer3 = TimeSinceBootMS();
+            while (TimeSinceBootMS() < timer3);
          }
 
          // (V) Read Identification Space of the Device:
@@ -219,12 +235,17 @@ void ide_initialize(unsigned int BAR0, unsigned int BAR1, unsigned int BAR2, uns
             ide_devices[count].Model[k + 1] = ide_buf[ATA_IDENT_MODEL + k];}
          ide_devices[count].Model[40] = 0; // Terminate String.
 
+         //print name of the device
+         
+         ErrrConsole->WriteLine(((StringObj)"Found " + ide_devices[count].Model).c_str());
+         ErrrConsole->graphics->DisplayNonSynced();
+
          count++;
       }
 
    // 4- Print Summary:
    for (int i = 0; i < 4; i++)
       if (ide_devices[i].Reserved == 1) {
-         ErrrConsole->WriteLine(((StringObj)" Found " + (const char *[]){"ATA", "ATAPI"}[ide_devices[i].Type] + " GB: " + (ide_devices[i].Size / 1024 / 1024 / 2) + " Model: "  + ide_devices[i].Model).c_str());
+         ErrrConsole->WriteLineS(((StringObj)" Found " + (const char *[]){"ATA", "ATAPI"}[ide_devices[i].Type] + " GB: " + (ide_devices[i].Size / 1024 / 1024 / 2) + " Model: "  + ide_devices[i].Model).c_str());
       }
 }

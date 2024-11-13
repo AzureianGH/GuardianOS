@@ -4,7 +4,7 @@
 #define __basic_h__
 #endif
 #define OS_Author_ "Azureian"
-#define OS_Version_ "0.2.9B"
+#define OS_Version_ "0.3.9B"
 // RR = Regular Release
 // B = Beta
 // A = Alpha

@@ -121,6 +121,8 @@ typedef uint32_t dword;
 typedef uint64_t qword;
 #define nullptr 0
 
+typedef void (*SimpleProgramFunc)();
+
 #define VECTOR_RESIZE_FACTOR 2
 
 //Vector template

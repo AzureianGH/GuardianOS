@@ -203,6 +203,34 @@ char* int_to_string_hex(int value) {
         buffer[i] = "0123456789ABCDEF"[value % 16];
     return &buffer[i+1];
 }
+char* u8_to_string_hex(uint8_t value) {
+    //if 0, return 0
+    if (value == 0) {
+        return "0";
+    }
+    //0x at the start
+    static char buffer[32] = {0};
+    buffer[0] = '0';
+    buffer[1] = 'x';
+    int i = 30;
+    for(; value && i ; --i, value /= 16)
+        buffer[i] = "0123456789ABCDEF"[value % 16];
+    return &buffer[i+1];
+}
+char* u16_to_string_hex(uint16_t value) {
+    //if 0, return 0
+    if (value == 0) {
+        return "0";
+    }
+    //0x at the start
+    static char buffer[32] = {0};
+    buffer[0] = '0';
+    buffer[1] = 'x';
+    int i = 30;
+    for(; value && i ; --i, value /= 16)
+        buffer[i] = "0123456789ABCDEF"[value % 16];
+    return &buffer[i+1];
+}
 char* u64_to_string_hex(uint64_t value) {
     //if 0, return 0
     if (value == 0) {
@@ -312,6 +340,12 @@ char* ToHexNumberString(int value) {
 }
 char* ToHexNumberString(uint64_t value) {
     return u64_to_string_hex(value);
+}
+char* ToHexNumberString(uint8_t value) {
+    return u8_to_string_hex(value);
+}
+char* ToHexNumberString(uint16_t value) {
+    return u16_to_string_hex(value);
 }
 char ToCharacter(int value) {
     return int_to_char(value);
