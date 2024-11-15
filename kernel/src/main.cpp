@@ -123,7 +123,14 @@ limine_kernel_address_response *kernel_address_response;
 limine_efi_system_table_response *efi_system_table_response;
 extern uint64_t kernel_start;
 extern uint64_t kernel_end;
-
+void TestProgram()
+{
+    while (/* condition */true)
+    {
+        /* code */
+    }
+    
+}
 extern void kernel_main() {
     // Ensure the bootloader actually understands our base revision (see spec).
     if (LIMINE_BASE_REVISION_SUPPORTED == false) {
@@ -200,7 +207,7 @@ extern void kernel_main() {
     InitializeISR();
     
     EnableInterrupts();
-    SetPITFrequency(1000);
+    SetPITFrequency(100);
     InitializeTime();
     console.WriteLine("IDT Initialized!", IColor::RGB(170, 255, 170));
     //init PCI
@@ -223,6 +230,8 @@ extern void kernel_main() {
             hcf();
         }
     #endif
+    console.WriteLine("Initializing Scheduler...", IColor::RGB(170, 170, 170));
+    SchedulerInit();
     console.WriteLine("Initialization Complete!", IColor::RGB(170, 255, 170));
     console.WriteLine(((StringObj)"[GuardianOS Version: " + OS_Version_ + "]").c_str(), IColor::RGB(170, 170, 255));
     graphics.Display();
@@ -234,7 +243,8 @@ extern void kernel_main() {
     /// # START #
     /// #########
     Taskbar taskbar(&graphics);
-    void* returnable = efi_system_table_response->address; // The address of the EFI system table
+    Program_t program = CreateProgram(TestProgram);
+    AddProgram(program);
     while (true)
     {
         console.Clear();
@@ -247,15 +257,8 @@ extern void kernel_main() {
         {
             console.WriteLine(((StringObj)"Device: " + PCIDevice2IDString(devices[i])).c_str());
         }
-
-        
-        
-        
         DrawCursor();
         graphics.Display();
-        
-        
-        
     }
     halt();
 }

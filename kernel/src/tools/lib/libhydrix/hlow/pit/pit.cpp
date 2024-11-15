@@ -10,6 +10,7 @@ uint64_t TimeGetMilliseconds() {
 
 void PITTimerHandler(registers_t *r) {
     global_tick += 1;
+    
 }
 
 /// @brief PITWait for a certain number of ticks

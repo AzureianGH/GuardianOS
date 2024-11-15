@@ -41,7 +41,7 @@ void InitializeISR() {
   SetIDTGate(29, (uint64_t)isr29);
   SetIDTGate(30, (uint64_t)isr30);
   SetIDTGate(31, (uint64_t)isr31);
-  PortIO::OutByte(0x20, 0x11);
+  PortIO::OutByte(0x20, 0x11); 
   PortIO::OutByte(0xA0, 0x11);
   PortIO::OutByte(0x21, 0x20);
   PortIO::OutByte(0xA1, 0x28);
@@ -277,9 +277,10 @@ void InitializeISR() {
   SetIDTGate(255, (uint64_t)isr255);
   InitializeIDT();
 }
-
+extern void SchedulerInterruptHandler(registers_t* reg);
 void IQR0Handler(registers_t *r) {
   PITTimerHandler(r);
+  SchedulerInterruptHandler(r);
 }
 
 extern "C" void ISRHandler(registers_t *r) {

@@ -38,3 +38,4 @@
 #include <libhydrix/hfile/ahci.h>
 #include <libhydrix/hfile/ata.h>
 #include <libhydrix/hfile/ide.h>
+#include <libhydrix/hlow/prog/program.h>

@@ -197,6 +197,17 @@ public:
         }
     }
 
+    bool IsEmpty()
+    {
+        return len == 0;
+    }
+
+    //Front
+    T Front()
+    {
+        return data[0];
+    }
+
     T* Data()
     {
         return data;
