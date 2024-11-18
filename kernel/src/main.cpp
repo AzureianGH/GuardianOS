@@ -88,6 +88,12 @@ extern void (*__init_array_end[])();
 
 Graphics graphics;
 Console console;
+StringObj ConsoleWriting;
+int TimesKeyPressed = 0;
+void TestKeyboard(KeyboardData_t data)
+{
+
+}
 
 void DrawCursor()
 {
@@ -163,7 +169,6 @@ extern void kernel_main() {
     display.Init((void*)framebuffer->address, framebuffer->bpp, framebuffer->width, framebuffer->height, 60);
     
     InitializeHeap(hhdm_memmap->offset, memsize - hhdm_memmap->offset);
-
     string* InitFailures = new string[100];
     graphics.Init((uint32_t*)framebuffer->address, framebuffer->width, framebuffer->height, framebuffer->pitch, framebuffer->bpp, framebuffer->red_mask_shift, framebuffer->green_mask_shift, framebuffer->blue_mask_shift, framebuffer->red_mask_size, framebuffer->green_mask_size, framebuffer->blue_mask_size);
     console.Init(&graphics, 16, false);
@@ -243,8 +248,7 @@ extern void kernel_main() {
     /// # START #
     /// #########
     Taskbar taskbar(&graphics);
-    Program_t program = CreateProgram(TestProgram);
-    AddProgram(program);
+    AddKeyboardInterrupt(TestKeyboard);
     while (true)
     {
         console.Clear();
@@ -252,11 +256,8 @@ extern void kernel_main() {
         console.WriteLine("");
         console.WriteLine("");
         console.WriteLine("");
-
-        for (int i = 0; i < devices.Length(); i++)
-        {
-            console.WriteLine(((StringObj)"Device: " + PCIDevice2IDString(devices[i])).c_str());
-        }
+        console.WriteLine(ConsoleWriting.c_str());
+        console.WriteLine(ToString(TimesKeyPressed));
         DrawCursor();
         graphics.Display();
     }

@@ -13,10 +13,6 @@ void defaultUsermodeEntryFunction()
     int colortest = 0xFFFFFF;
     while (true)
     {
-        if (test > 100)
-        {
-            test = 0;
-        }
     }
 }
 

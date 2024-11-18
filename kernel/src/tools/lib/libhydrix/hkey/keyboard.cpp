@@ -12,7 +12,7 @@ char upperscancode[58] = {
 };
 bool GetKeyDown(KeyCode scancode)
 {
-    return PortIO::InByte(0x60) == (char)scancode;
+    return (LastScancode == (char)scancode);
 }
 inline uint8_t getScancode()
 {
@@ -28,7 +28,11 @@ void EnableKeyboard()
 {
     AllowKeyboard = true;
 }
-
+Vector<void(*)(KeyboardData_t)> InterruptsToCall;
+void AddKeyboardInterrupt(void (*func)(KeyboardData_t))
+{
+    InterruptsToCall.PushBack(func);
+}
 void KeyboardHandler(registers_t *r)
 {
     if (!AllowKeyboard)
@@ -36,30 +40,21 @@ void KeyboardHandler(registers_t *r)
         return;
     }
     uint8_t scancode = getScancode();
-    if (scancode < 58 && GetKeyDown((KeyCode)scancode))
+    //run handlers
+    KeyboardData_t data;
+    data.key = (KeyCode)scancode;
+    //check if key is pressed
+    if (scancode & 0x80)
     {
-        //if shift is pressed, capitalize, if backspace, send \b to console
-        if (GetKeyDown((KeyCode)0x2A) || GetKeyDown((KeyCode)0x36))
-        {
-            if (!Keyboard_Console_IDT->allow_typing) return;
-            Keyboard_Console_IDT->PutCharS(upperscancode[scancode]);
-        }
-        else if (scancode == 0x0E)
-        {
-            if (!Keyboard_Console_IDT->allow_typing) return;
-            Keyboard_Console_IDT->PutCharS('\b');
-        }
-        else
-        {
-            if (!Keyboard_Console_IDT->allow_typing) return;
-            Keyboard_Console_IDT->PutCharS(scancodemap[scancode]);
-        }
+        data.pressed = false;
     }
-    //enter
-    else if (scancode == 0x1C && GetKeyDown((KeyCode)scancode))
+    else
     {
-        if (!Keyboard_Console_IDT->allow_typing) return;
-        Keyboard_Console_IDT->PutCharS('\n');
+        data.pressed = true;
+    }
+    for (int i = 0; i < InterruptsToCall.Length(); i++)
+    {
+        InterruptsToCall[i](data);
     }
     LastScancode = scancode;
     return;
@@ -68,6 +63,7 @@ void KeyboardHandler(registers_t *r)
 void KeyboardInit(Console* console)
 {
     Keyboard_Console_IDT = console;
+    InterruptsToCall = Vector<void(*)(KeyboardData_t)>();
 }
 
 uint64_t KeyboardGetKey()

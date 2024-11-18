@@ -127,7 +127,10 @@ public:
         other.str = 0;
         other.len = 0;
     }
-
+    StringObj() {
+        len = 0;
+        str = "\0";
+    }
     // Assignment operators
     StringObj& operator=(const char* newStr) {
         if (this->str != newStr) {

@@ -115,3 +115,10 @@ void DisableKeyboard();
 void EnableKeyboard();
 uint64_t KeyboardGetKey();
 
+typedef struct 
+{
+    KeyCode key;
+    bool pressed;
+} KeyboardData_t;
+
+void AddKeyboardInterrupt(void (*func)(KeyboardData_t));
