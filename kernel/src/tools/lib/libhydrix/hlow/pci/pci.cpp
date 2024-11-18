@@ -35919,7 +35919,7 @@ void PrintIDEBars(Console* console)
 
             if (bar.size > 0) { // Check if the BAR is valid
                 console->WriteLine(((StringObj)" BAR " + bar_index + ": Address " +
-                                    ToHexNumberString((uintptr_t)bar.u.address) +
+                                    ToHexNumberString((int)(uintptr_t)bar.u.address) +
                                     ", Size " + ToHexNumberString(bar.size) +
                                     ", Flags " + ToHexNumberString((uint64_t)bar.flags)).c_str());
             }

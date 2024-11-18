@@ -80,7 +80,7 @@ $(IMAGE_NAME).iso: limine kernel
 		iso_root -o $(IMAGE_NAME).iso
 	./limine/limine bios-install $(IMAGE_NAME).iso
 	rm -rf iso_root
-	qemu-system-x86_64 -m 4G -cpu max -machine q35 -cdrom $(IMAGE_NAME).iso -boot d -drive file=hdd.img,if=ide,index=0 -device ich9-intel-hda,bus=pcie.0,addr=0x1b -device hda-micro,audiodev=hda -audiodev alsa,id=hda
+	qemu-system-x86_64 -m 4G -cpu max -machine q35 -cdrom $(IMAGE_NAME).iso -boot d -drive file=hdd.img,if=ide,index=0 -device piix3-ide -device ich9-intel-hda,bus=pcie.0,addr=0x1b -device hda-micro,audiodev=hda -audiodev alsa,id=hda
 
 $(IMAGE_NAME).hdd: limine kernel
 	rm -f $(IMAGE_NAME).hdd

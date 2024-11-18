@@ -256,7 +256,6 @@ extern void kernel_main() {
         console.WriteLine("");
         console.WriteLine("");
         console.WriteLine("");
-        console.WriteLine(ConsoleWriting.c_str());
         console.WriteLine(ToString(TimesKeyPressed));
         DrawCursor();
         graphics.Display();
