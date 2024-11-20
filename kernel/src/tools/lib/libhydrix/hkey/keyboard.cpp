@@ -33,6 +33,17 @@ void AddKeyboardInterrupt(void (*func)(KeyboardData_t))
 {
     InterruptsToCall.PushBack(func);
 }
+void RemoveKeyboardInterrupt(void (*func)(KeyboardData_t))
+{
+    for (int i = 0; i < InterruptsToCall.Length(); i++)
+    {
+        if (InterruptsToCall[i] == func)
+        {
+            InterruptsToCall.Erase(i);
+            return;
+        }
+    }
+}
 void KeyboardHandler(registers_t *r)
 {
     if (!AllowKeyboard)
@@ -43,6 +54,7 @@ void KeyboardHandler(registers_t *r)
     //run handlers
     KeyboardData_t data;
     data.key = (KeyCode)scancode;
+    data.character = scancodemap[scancode];
     //check if key is pressed
     if (scancode & 0x80)
     {

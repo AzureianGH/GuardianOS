@@ -7,6 +7,7 @@
 #include <libhydrix/libhydrix.h>
 #include <basic.h>
 #include <Taskbar/Taskbar.h>
+#include <Terminal/Terminal.h>
 namespace {__attribute__((used, section(".requests")))volatile LIMINE_BASE_REVISION(2);}
 DisplayInfo display;
 
@@ -88,12 +89,7 @@ extern void (*__init_array_end[])();
 
 Graphics graphics;
 Console console;
-StringObj ConsoleWriting;
-int TimesKeyPressed = 0;
-void TestKeyboard(KeyboardData_t data)
-{
 
-}
 
 void DrawCursor()
 {
@@ -248,15 +244,14 @@ extern void kernel_main() {
     /// # START #
     /// #########
     Taskbar taskbar(&graphics);
-    AddKeyboardInterrupt(TestKeyboard);
+    Terminal terminal;
+    terminal.Init(&graphics);
+    StringObj Cstring = "";
     while (true)
     {
         console.Clear();
-        taskbar.Draw();
-        console.WriteLine("");
-        console.WriteLine("");
-        console.WriteLine("");
-        console.WriteLine(ToString(TimesKeyPressed));
+        //taskbar.Draw();
+        terminal.Display();
         DrawCursor();
         graphics.Display();
     }

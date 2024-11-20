@@ -204,6 +204,17 @@ public:
         return str;
     }
 
+    void Remove(size_t index) {
+        if (index >= len) {
+            return;
+        }
+        for (size_t i = index; i < len - 1; i++) {
+            str[i] = str[i + 1];
+        }
+        str[len - 1] = '\0';
+        len--;
+    }
+    
     bool IsEmpty() const {
         return len == 0;
     }

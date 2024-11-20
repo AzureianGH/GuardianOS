@@ -14,7 +14,7 @@ uint64_t GetSystemTime();
 
 long long TimeSinceBootMS();
 long long TimeCurrentTime();
-
+long GetTimeDelta();
 typedef struct {
     int Seconds;
     int Minutes;

@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <libhydrix/hmem/smem/allocator.h>
+#include <libhydrix/hmem/smem/smem.h>
 /// @brief A function pointer that can accept any amount of arguments and return any type.
 typedef void (*function_pointer)();
 /// @brief Basic handle in general.
@@ -111,6 +112,9 @@ typedef struct _bmpa
 } BMPA;
 
 typedef uint8_t byte;
+typedef uint16_t ushort;
+typedef uint32_t uint;
+typedef uint64_t ulong;
 
 BMPI StretchBMPI(BMPI bmp, int width, int height);
 BMPA StretchBMPA(BMPA bmp, int width, int height);

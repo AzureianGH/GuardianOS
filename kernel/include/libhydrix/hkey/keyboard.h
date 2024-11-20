@@ -47,14 +47,14 @@ enum class KeyCode
     KEY_SPACE = 0x39,
     KEY_MINUS = 0x0C,
     KEY_EQUAL = 0x0D,
-    KEY_LEFTBRACKET = 0x1A,
-    KEY_RIGHTBRACKET = 0x1B,
+    KEY_LEFTBRACE = 0x1A,
+    KEY_RIGHTBRACE = 0x1B,
     KEY_BACKSLASH = 0x2B,
     KEY_SEMICOLON = 0x27,
     KEY_APOSTROPHE = 0x28,
     KEY_GRAVE = 0x29,
     KEY_COMMA = 0x33,
-    KEY_PERIOD = 0x34,
+    KEY_DOT = 0x34,
     KEY_SLASH = 0x35,
     KEY_CAPSLOCK = 0x3A,
     KEY_F1 = 0x3B,
@@ -69,9 +69,6 @@ enum class KeyCode
     KEY_F10 = 0x44,
     KEY_F11 = 0x57,
     KEY_F12 = 0x58,
-    KEY_PRINTSCREEN = 0x37,
-    KEY_SCROLLLOCK = 0x46,
-    KEY_PAUSE = 0x45,
     KEY_INSERT = 0x52,
     KEY_HOME = 0x47,
     KEY_PAGEUP = 0x49,
@@ -83,11 +80,11 @@ enum class KeyCode
     KEY_DOWN = 0x50,
     KEY_UP = 0x48,
     KEY_NUMLOCK = 0x45,
-    KEY_KP_DIVIDE = 0xB5,
+    KEY_KP_DIVIDE = 0x35,
     KEY_KP_MULTIPLY = 0x37,
     KEY_KP_MINUS = 0x4A,
     KEY_KP_PLUS = 0x4E,
-    KEY_KP_ENTER = 0x9C,
+    KEY_KP_ENTER = 0x1C,
     KEY_KP_1 = 0x4F,
     KEY_KP_2 = 0x50,
     KEY_KP_3 = 0x51,
@@ -98,15 +95,7 @@ enum class KeyCode
     KEY_KP_8 = 0x48,
     KEY_KP_9 = 0x49,
     KEY_KP_0 = 0x52,
-    KEY_KP_PERIOD = 0x53,
-    KEY_LCTRL = 0x1D,
-    KEY_LSHIFT = 0x2A,
-    KEY_LALT = 0x38,
-    KEY_LGUI = 0xDB,
-    KEY_RCTRL = 0x9D,
-    KEY_RSHIFT = 0x36,
-    KEY_RALT = 0xB8,
-    KEY_RGUI = 0xDC
+    KEY_KP_DOT = 0x53
 };
 bool GetKeyDown(KeyCode scancode);
 void KeyboardHandler(registers_t *r);
@@ -119,6 +108,8 @@ typedef struct
 {
     KeyCode key;
     bool pressed;
+    char character;
 } KeyboardData_t;
 
 void AddKeyboardInterrupt(void (*func)(KeyboardData_t));
+void RemoveKeyboardInterrupt(void (*func)(KeyboardData_t));

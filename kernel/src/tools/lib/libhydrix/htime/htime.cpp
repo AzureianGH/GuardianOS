@@ -166,6 +166,17 @@ long long TimeSinceBootMS()
 	return (TimeGetSeconds() + (TimeGetMinutes() * 60) + (TimeGetHours() * 3600)) - TimeAtBoot;
 }
 
+long delta = 0;
+
+long GetTimeDelta()
+{
+	//get time since last call
+	long current = TimeSinceBootMS();
+	long diff = current - delta;
+	delta = current;
+	return diff;
+}
+
 TimezoneOffset_t CurrentSelectedTimezone = UTC;
 
 void SetCurrentTimezone(TimezoneOffset_t offset)
