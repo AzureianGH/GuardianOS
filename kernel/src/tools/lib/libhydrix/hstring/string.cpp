@@ -245,6 +245,72 @@ char* u64_to_string_hex(uint64_t value) {
         buffer[i] = "0123456789ABCDEF"[value % 16];
     return &buffer[i+1];
 }
+
+char* u8_to_string_binary(uint8_t value) {
+    // Allocate memory for "0b" + 8 bits + null terminator
+    char* buffer = (char*)KernelAllocate(2 + 8 + 1);
+    if (!buffer) return 0; // Return 0 if allocation fails
+
+    buffer[0] = '0';
+    buffer[1] = 'b';
+
+    for (int i = 0; i < 8; i++) {
+        buffer[2 + i] = (value & (1 << (7 - i))) ? '1' : '0';
+    }
+    buffer[10] = '\0'; // Null-terminate the string
+
+    return buffer;
+}
+
+char* u16_to_string_binary(uint16_t value) {
+    // Allocate memory for "0b" + 16 bits + null terminator
+    char* buffer = (char*)KernelAllocate(2 + 16 + 1);
+    if (!buffer) return 0;
+
+    buffer[0] = '0';
+    buffer[1] = 'b';
+
+    for (int i = 0; i < 16; i++) {
+        buffer[2 + i] = (value & (1 << (15 - i))) ? '1' : '0';
+    }
+    buffer[18] = '\0';
+
+    return buffer;
+}
+
+char* u32_to_string_binary(uint32_t value) {
+    // Allocate memory for "0b" + 32 bits + null terminator
+    char* buffer = (char*)KernelAllocate(2 + 32 + 1);
+    if (!buffer) return 0;
+
+    buffer[0] = '0';
+    buffer[1] = 'b';
+
+    for (int i = 0; i < 32; i++) {
+        buffer[2 + i] = (value & (1 << (31 - i))) ? '1' : '0';
+    }
+    buffer[34] = '\0';
+
+    return buffer;
+}
+
+char* u64_to_string_binary(uint64_t value) {
+    // Allocate memory for "0b" + 64 bits + null terminator
+    char* buffer = (char*)KernelAllocate(2 + 64 + 1);
+    if (!buffer) return 0;
+
+    buffer[0] = '0';
+    buffer[1] = 'b';
+
+    for (int i = 0; i < 64; i++) {
+        buffer[2 + i] = (value & ((uint64_t)1 << (63 - i))) ? '1' : '0';
+    }
+    buffer[66] = '\0';
+
+    return buffer;
+}
+
+
 char int_to_char(int value) {
     if (value == 0) {
         return '0';
@@ -346,6 +412,18 @@ char* ToHexNumberString(uint8_t value) {
 }
 char* ToHexNumberString(uint16_t value) {
     return u16_to_string_hex(value);
+}
+char* ToBinaryNumberString(uint8_t value) {
+    return u8_to_string_binary(value);
+}
+char* ToBinaryNumberString(uint16_t value) {
+    return u16_to_string_binary(value);
+}
+char* ToBinaryNumberString(uint32_t value) {
+    return u32_to_string_binary(value);
+}
+char* ToBinaryNumberString(uint64_t value) {
+    return u64_to_string_binary(value);
 }
 char ToCharacter(int value) {
     return int_to_char(value);

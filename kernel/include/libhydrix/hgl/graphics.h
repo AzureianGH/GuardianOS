@@ -214,6 +214,10 @@ class Graphics {
         /// @brief Sets the refresh rate
         /// @param hz The refresh rate
         void SetHz(uint64_t hz);
+        /// @brief Sets the refresh rate with a multiplication offset
+        /// @param hz The refresh rate
+        /// @param multiplication_offset The multiplication offset
+        void SetHz(uint64_t hz, uint multiplication_offset);
         /// @brief Prints debug information
         /// @param Debug The debug information
         void PrintDebug(StringObj Debug);

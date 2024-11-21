@@ -39,3 +39,4 @@
 #include <libhydrix/hfile/ata.h>
 #include <libhydrix/hfile/ide.h>
 #include <libhydrix/hlow/prog/program.h>
+#include <libhydrix/hgl/display.h>

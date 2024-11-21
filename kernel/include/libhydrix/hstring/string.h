@@ -88,6 +88,22 @@ char* ToHexNumberString(uint8_t value);
 /// @param buffer The buffer
 /// @return The string in hex
 char* ToHexNumberString(uint16_t value);
+/// @brief Convert a unsigned byte to a binary string
+/// @param value The unsigned byte
+/// @return The string
+char* ToBinaryNumberString(uint8_t value);
+/// @brief Convert a unsigned short to a binary string
+/// @param value The unsigned short
+/// @return The string
+char* ToBinaryNumberString(uint16_t value);
+/// @brief Convert a unsigned int to a binary string
+/// @param value The unsigned int
+/// @return The string
+char* ToBinaryNumberString(uint32_t value);
+/// @brief Convert a unsigned long long to a binary string
+/// @param value The unsigned long long
+/// @return The string
+char* ToBinaryNumberString(uint64_t value);
 /// @brief Convert an integer to char
 /// @param value The integer
 /// @return The char
@@ -214,7 +230,7 @@ public:
         str[len - 1] = '\0';
         len--;
     }
-    
+
     bool IsEmpty() const {
         return len == 0;
     }

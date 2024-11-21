@@ -97,9 +97,9 @@ void Taskbar::Draw()
 
     frames++;
     //use rtc to get time in seconds getSeconds();
-    if (TimeGetSeconds() != last)
+    if (TimeSinceBootMS() != last)
     {
-        last = TimeGetSeconds();
+        last = TimeSinceBootMS();
         fps = frames;
         frames = 0;
     }

@@ -208,7 +208,7 @@ extern void kernel_main() {
     InitializeISR();
     
     EnableInterrupts();
-    SetPITFrequency(100);
+    SetPITFrequency(1000);
     InitializeTime();
     console.WriteLine("IDT Initialized!", IColor::RGB(170, 255, 170));
     //init PCI
@@ -238,20 +238,32 @@ extern void kernel_main() {
     graphics.Display();
     console.Clear();
     
-    graphics.SetHz(200);
+    
     Vector<pci_device_t> devices = PCIGetDevices();
     /// #########
     /// # START #
     /// #########
     Taskbar taskbar(&graphics);
-    Terminal terminal;
-    terminal.Init(&graphics);
-    StringObj Cstring = "";
+    //Terminal terminal;
+    //terminal.Init(&graphics);
+    EDID_Information_t* edid = ParseEDID(framebuffer->edid);
+    //get refresh rate
+    if (edid->detailed_timing_description_1[0] == 0)
+    {
+        graphics.SetHz(60);
+    }
+    else
+    {
+        graphics.SetHz((edid->detailed_timing_description_1[1]));
+    }
+    graphics.SetHz(200);
     while (true)
     {
         console.Clear();
-        //taskbar.Draw();
-        terminal.Display();
+        console.WriteLine("");
+        console.WriteLine("");
+        console.WriteLine("");
+        taskbar.Draw();
         DrawCursor();
         graphics.Display();
     }

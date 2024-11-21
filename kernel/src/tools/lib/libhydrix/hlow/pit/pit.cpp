@@ -40,3 +40,7 @@ void SetPITFrequency(uint64_t freq) { // freq is in Hz
     PortIO::OutByte(0x40, divisor & 0xFF); // Low byte of divisor
     PortIO::OutByte(0x40, (divisor >> 8) & 0xFF); // High byte of divisor
 }
+
+uint64_t GetPITFrequency() {
+    return frequency;
+}

@@ -163,17 +163,7 @@ void Terminal::Recalculate()
 
 void Terminal::Display()
 {
-    // Redraw the entire terminal display
-    for (uint y = 0; y < FittableLines; y++)
-    {
-        for (uint x = 0; x < FittableCharsPerLine; x++)
-        {
-            size_t index = y * graphics->FontLetterSpacing + x;
-            if (index < buffer_size)
-            {
-                DrawChar(buffer[index], x, y);
-            }
-        }
-    }
+    Clear();
+    RedrawRegion(0, 0, FittableCharsPerLine, FittableLines);
     DrawCursor();
 }

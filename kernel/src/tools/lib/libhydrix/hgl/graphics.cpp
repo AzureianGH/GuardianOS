@@ -242,9 +242,9 @@ void Graphics::Display() {
     uint64_t current_time = TimeGetMilliseconds();
     uint64_t delta_time = current_time - last_frame_time;
 
-    // Frame time logic to maintain target FPS
+    // Skip rendering if the delta time is less than the target frame time
     if (delta_time < targetFrameTime) {
-        return; // Skip rendering if we're still within the target frame time
+        return; // Skip the current frame
     }
 
     // Update frame counter for FPS calculation
@@ -257,22 +257,25 @@ void Graphics::Display() {
         fps_last_update = current_time; // Reset the last update time for FPS
     }
 
-    // Flip the buffers
+    // Flip the buffers (render the frame)
     memcpy(FrameBuffer, SwapBuffer, CachedWHB8);
 
+    // Update last frame time
     last_frame_time = current_time; // Update last frame time for the next call
 }
+
 
 void Graphics::DisplayLockedSynced() {
     uint64_t current_time = TimeGetMilliseconds();
     uint64_t delta_time = current_time - last_frame_time;
 
-    // Sleep to maintain target FPS
+    // Sleep or spin-wait to maintain target FPS
     if (delta_time < targetFrameTime) {
         PITSleepMS(targetFrameTime - delta_time);
+        while (TimeGetMilliseconds() - last_frame_time < targetFrameTime);
     }
 
-    // Same as in the Display() method
+    // FPS calculation and update
     frame_counter++;
     if (current_time - fps_last_update >= 1000) {
         current_fps = frame_counter;
@@ -280,8 +283,11 @@ void Graphics::DisplayLockedSynced() {
         fps_last_update = current_time;
     }
 
+    // Flip buffers
     memcpy(FrameBuffer, SwapBuffer, CachedWHB8);
-    last_frame_time = TimeGetMilliseconds();
+
+    // Update last frame time to prevent drift
+    last_frame_time += targetFrameTime;
 }
 
 void Graphics::DisplayNonSynced() {
@@ -517,8 +523,14 @@ int Graphics::GetPixel(int x, int y)
 
 void Graphics::SetHz(uint64_t hz)
 {
-    MaxHz = hz;
-    targetFrameTime = 1000 / MaxHz; // 60 FPS in milliseconds
+    MaxHz = hz; // Account for PIT frequency
+    targetFrameTime = 1000 / hz; // Target frame time in ms
+}
+
+void Graphics::SetHz(uint64_t hz, uint multiplication_offset)
+{
+    MaxHz = hz * multiplication_offset; // Account for PIT frequency
+    targetFrameTime = 1000 / MaxHz; // Target frame time in ms
 }
 
 uint64_t Graphics::GetDrawFPS()

@@ -11,3 +11,4 @@ extern volatile uint64_t global_tick;
 #define PIT_DEF_FREQ 100
 void PITSleepS(uint64_t sec);
 void PITSleepMS(uint64_t msec);
+uint64_t GetPITFrequency();
