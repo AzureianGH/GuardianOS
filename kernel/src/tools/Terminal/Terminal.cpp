@@ -78,48 +78,17 @@ void Terminal::DrawChar(char c, uint x, uint y)
 
 void Terminal::RedrawRegion(uint x_start, uint y_start, uint width, uint height)
 {
-    for (uint y = y_start; y < y_start + height; y++)
-    {
-        for (uint x = x_start; x < x_start + width; x++)
-        {
-            size_t index = y * FittableCharsPerLine + x;
-            if (index < buffer_size)
-            {
-                DrawChar(buffer[index], x, y);
-            }
-        }
-    }
+
 }
 
 void Terminal::DrawCursor()
 {
-    if (cursor_enabled && cursor_visible)
-    {
-        // Draw the cursor directly on the graphics layer
-        graphics->DrawFilledRectangle(
-            cursor_x * (char_width + char_spacing),
-            cursor_y * char_height,
-            cursor_width,
-            cursor_height,
-            cursor_color
-        );
-    }
+
 }
 
 void Terminal::KeyboardTypingHandler(KeyboardData_t data)
 {
-    if (locked || !data.pressed || !buffer)
-        return;
 
-    // Update buffer with new character and redraw affected region
-    buffer[buffer_index] = data.character;
-    uint x = buffer_index % FittableCharsPerLine;
-    uint y = buffer_index / FittableCharsPerLine;
-    buffer_index = (buffer_index + 1) % buffer_size;
-
-    RedrawRegion(x, y, 1, 1);
-    cursor_x = buffer_index % FittableCharsPerLine;
-    cursor_y = buffer_index / FittableCharsPerLine;
 }
 
 void Terminal::StaticKeyboardTypingHandler(KeyboardData_t data)
@@ -149,15 +118,11 @@ void Terminal::Init(Graphics* graphics)
 
 void Terminal::Recalculate()
 {
-    // Update dimensions and allocate buffer
+    // Recalculate the number of characters that can fit on the screen
     FittableCharsPerLine = drawing_width / (char_width + char_spacing);
     FittableLines = drawing_height / char_height;
     buffer_size = FittableCharsPerLine * FittableLines;
-
-    if (buffer)
-        KernelFree(buffer);
     buffer = (char*)KernelAllocate(buffer_size);
-    buffer_index = 0;
     Clear();
 }
 

@@ -264,6 +264,35 @@ void Graphics::Display() {
     last_frame_time = current_time; // Update last frame time for the next call
 }
 
+void Graphics::Display(void (*drawFuncs)(void)) {
+    uint64_t current_time = TimeGetMilliseconds();
+    uint64_t delta_time = current_time - last_frame_time;
+
+    // Skip rendering if the delta time is less than the target frame time
+    if (delta_time < targetFrameTime) {
+        return; // Skip the current frame
+    }
+
+    // Update frame counter for FPS calculation
+    frame_counter++;
+
+    // FPS calculation and update every second
+    if (current_time - fps_last_update >= 1000) {
+        current_fps = frame_counter;   // Store the calculated FPS
+        frame_counter = 0;             // Reset frame counter
+        fps_last_update = current_time; // Reset the last update time for FPS
+    }
+
+    // Call the draw functions
+    drawFuncs();
+
+    // Flip the buffers (render the frame)
+    memcpy(FrameBuffer, SwapBuffer, CachedWHB8);
+
+    // Update last frame time
+    last_frame_time = current_time; // Update last frame time for the next call
+}
+
 
 void Graphics::DisplayLockedSynced() {
     uint64_t current_time = TimeGetMilliseconds();
@@ -516,6 +545,19 @@ void Graphics::DrawCubicCurve(float x0, float y0, float x1, float y1, float x2, 
         DrawPixel((int)x, (int)y, color);
     }
 }
+
+//bitmap
+void Graphics::DrawBitmap(uint* buffer, int x, int y, int w, int h)
+{
+    for (int i = 0; i < h; i++)
+    {
+        for (int j = 0; j < w; j++)
+        {
+            DrawPixelInline(x + j, y + i, buffer[i * w + j]);
+        }
+    }
+}
+
 int Graphics::GetPixel(int x, int y)
 {
     return GetPixelFromScreen(x,y);

@@ -129,6 +129,9 @@ class Graphics {
         /// @brief Display the buffer with waiting for the next frame but not sleeping
         /// @warning MUST BE CALLED AFTER DRAWING FOR ANYTHING TO BE VISIBLE
         void Display();
+        /// @brief Display the buffer with calls
+        /// @param drawFuncs The function to call
+        void Display(void (*drawFuncs)(void));
         /// @brief Display the buffer with waiting for the next frame AND sleeping to maintain the target frame rate, slows entire system.
         void DisplayLockedSynced();
         /// @brief Display the buffer without waiting for the next frame
@@ -206,6 +209,13 @@ class Graphics {
         /// @param y3 The vertical position of the fourth point
         /// @param color The color
         void DrawCubicCurve(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, int color);
+        /// @brief Draw a bitmap
+        /// @param buffer The buffer
+        /// @param x The horizontal position
+        /// @param y The vertical position
+        /// @param w The width
+        /// @param h The height
+        void DrawBitmap(uint* buffer, int x, int y, int w, int h);
         /// @brief Gets a pixel from the screen
         /// @param x Horizontal position
         /// @param y Vertical position

@@ -8,6 +8,7 @@
 #include <basic.h>
 #include <Taskbar/Taskbar.h>
 #include <Terminal/Terminal.h>
+#include <AWM/AqWm.h>
 namespace {__attribute__((used, section(".requests")))volatile LIMINE_BASE_REVISION(2);}
 DisplayInfo display;
 
@@ -89,7 +90,12 @@ extern void (*__init_array_end[])();
 
 Graphics graphics;
 Console console;
+Aqua_Window_Manager window_manager;
 
+void CallableDrawableWM()
+{
+    window_manager.DrawWindows();
+}
 
 void DrawCursor()
 {
@@ -168,7 +174,8 @@ extern void kernel_main() {
     string* InitFailures = new string[100];
     graphics.Init((uint32_t*)framebuffer->address, framebuffer->width, framebuffer->height, framebuffer->pitch, framebuffer->bpp, framebuffer->red_mask_shift, framebuffer->green_mask_shift, framebuffer->blue_mask_shift, framebuffer->red_mask_size, framebuffer->green_mask_size, framebuffer->blue_mask_size);
     console.Init(&graphics, 16, false);
-    
+    window_manager = Aqua_Window_Manager(&graphics);
+
     graphics.Clear();
     BMPI tridentstartup;
     tridentstartup.data = (int*)tridentfull;
@@ -244,19 +251,22 @@ extern void kernel_main() {
     /// # START #
     /// #########
     Taskbar taskbar(&graphics);
-    //Terminal terminal;
-    //terminal.Init(&graphics);
-    EDID_Information_t* edid = ParseEDID(framebuffer->edid);
-    //get refresh rate
-    if (edid->detailed_timing_description_1[0] == 0)
-    {
-        graphics.SetHz(60);
-    }
-    else
-    {
-        graphics.SetHz((edid->detailed_timing_description_1[1]));
-    }
     graphics.SetHz(200);
+    
+    Aqua_Window* window = window_manager.CreateShallowWindow(800, 600);
+    window->Title = "Wimdowns";
+    window->DrawHandler = [](uint* buffer)
+    {
+        memset(buffer, 0xFF0000, 800 * 600);
+    };
+    window->X = 100;
+    window->Y = 100;
+    window->EventHandler = [](Aqua_Window_Event event, void* data)
+    {
+        return;
+    };
+    window->HasTitleBar = true;
+    window_manager.SetActiveWindow(window);
     while (true)
     {
         console.Clear();
@@ -264,8 +274,9 @@ extern void kernel_main() {
         console.WriteLine("");
         console.WriteLine("");
         taskbar.Draw();
+        
         DrawCursor();
-        graphics.Display();
+        graphics.Display(CallableDrawableWM);
     }
     halt();
 }

@@ -17,6 +17,12 @@ typedef struct _point {
     int y;
 } Point;
 
+typedef struct _pointul
+{
+    uint64_t X;
+    uint64_t Y;
+} ULPoint;
+
 /// @brief A Floating Point, with x and y coordinates.
 typedef struct _fpoint {
     /// @brief The x coordinate.

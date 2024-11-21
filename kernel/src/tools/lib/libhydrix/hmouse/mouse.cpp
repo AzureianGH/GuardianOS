@@ -6,6 +6,8 @@
 #define MOUSE_NACK 0xFE
 #define MOUSE_ERROR 0xFC
 
+Vector<void (*)(MouseState)> MouseInterrupts;
+
 Console *mouse_console;
 static int sensitivity = 1; // Default sensitivity
 
@@ -175,21 +177,21 @@ void MouseHandler(registers_t *r)
             // Check if mouse left button is pressed
             if (mouse_byte[0] & 0x01) // Bit: 1
             {
-                State = MOUSE_LEFT;
+                State.State = MOUSE_LEFT;
             }
             // Check if mouse right button is pressed
             else if (mouse_byte[0] & 0x02) // Bit: 2
             {
-                State = MOUSE_RIGHT;
+                State.State = MOUSE_RIGHT;
             }
             // Check if mouse middle button is pressed
             else if (mouse_byte[0] & 0x04) // Bit: 3
             {
-                State = MOUSE_MIDDLE;
+                State.State = MOUSE_MIDDLE;
             }
             else
             {
-                State = MOUSE_NONE;
+                State.State = MOUSE_NONE;
             }
             mouse_cycle++;
             return;
@@ -236,4 +238,20 @@ void MouseHandler(registers_t *r)
             mouse_cycle = 0;
             break;
     }
+
+    //mouse ints
+    for (int i = 0; i < MouseInterrupts.Length(); i++)
+    {
+        MouseInterrupts[i](State);
+    }
+}
+
+void AddMouseInterrupt(void (*func)(MouseState))
+{
+    MouseInterrupts.PushBack(func);
+}
+
+void RemoveMouseInterrupt(void (*func)(MouseState))
+{
+    MouseInterrupts.EraseValue(func);
 }

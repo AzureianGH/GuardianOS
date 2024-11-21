@@ -153,7 +153,7 @@ extern "C" int64_t ISRHandlerSyscall(registers_t *r)
         }
         else if(r->rbx == 2)
         {
-            return GetCurrentMouseState();
+            return GetCurrentMouseState().State;
             
         }
         else if(r->rbx == 3)
