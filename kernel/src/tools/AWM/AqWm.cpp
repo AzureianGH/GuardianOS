@@ -9,67 +9,69 @@ void Aqua_Window_Manager::KeyboardWindowManager(KeyboardData_t data)
         //check if its key up or down
         if (data.pressed == false)
         {
-            SendEvent(ActiveWindow, Aqua_Window_Event::KeyRelease);
+            
+            SendEvent(ActiveWindow, WINDOWKeyRelease, (void*)&data);
         }
         else
         {
-            SendEvent(ActiveWindow, Aqua_Window_Event::KeyPress);
+            SendEvent(ActiveWindow, WINDOWKeyPress, (void*)&data);
         }
     }
 }
 ULPoint Offsetpnt = {0, 0};
+int callcount = 0;
 void Aqua_Window_Manager::MouseWindowManager(MouseState state)
 {
     if (ActiveWindow != nullptr)
     {
-        // Check if mouse is over the active window
-        if (state.X > ActiveWindow->X && state.X < ActiveWindow->X + ActiveWindow->Width &&
-            state.Y > ActiveWindow->Y && state.Y < ActiveWindow->Y + ActiveWindow->Height)
+        
+        // Check if the mouse is over the active window
+        if (GetMouseXPos() > ActiveWindow->X && GetMouseXPos() < ActiveWindow->X + ActiveWindow->Width &&
+            GetMouseYPos() > ActiveWindow->Y && GetMouseYPos() < ActiveWindow->Y + ActiveWindow->Height)
         {
-            // Mouse is over the active window
-            SendEvent(ActiveWindow, Aqua_Window_Event::MouseMove);
+            // Send move event
+            SendEvent(ActiveWindow, WINDOWMouseMove);
 
-            // Check for mouse press (left button down)
+            // Handle title bar dragging
             if (state.State == MOUSE_LEFT && !dragging)
             {
-                // Start dragging the window, calculate offset
-                dragging = true;
-                Offsetpnt.X = state.X - ActiveWindow->X;
-                Offsetpnt.Y = state.Y - ActiveWindow->Y;
+                if (GetMouseYPos() > ActiveWindow->Y && GetMouseYPos() < ActiveWindow->Y + 32) // Title bar hit test
+                {
+                    dragging = true;
+                    Offsetpnt.X = state.X - ActiveWindow->X;
+                    Offsetpnt.Y = GetMouseYPos() - ActiveWindow->Y;
+                }
             }
 
-            // If dragging is active, update the window's position
             if (dragging)
             {
-                // Update window position based on mouse movement
                 ActiveWindow->X = state.X - Offsetpnt.X;
-                ActiveWindow->Y = state.Y - Offsetpnt.Y;
+                ActiveWindow->Y = GetMouseYPos() - Offsetpnt.Y;
             }
 
-            // Check for mouse release (left button up)
             if (state.State == MOUSE_NONE && dragging)
             {
-                // Stop dragging
                 dragging = false;
             }
         }
         else
         {
-            // Mouse is not over the active window, check for focus change
+            // Check for focus change
             for (int i = 0; i < Windows.Length(); i++)
             {
                 Aqua_Window* window = Windows[i];
                 if (state.X > window->X && state.X < window->X + window->Width &&
-                    state.Y > window->Y && state.Y < window->Y + window->Height)
+                    GetMouseYPos() > window->Y && GetMouseYPos() < window->Y + window->Height)
                 {
                     SetActiveWindow(window);
-                    SendEvent(window, Aqua_Window_Event::Focus);
+                    SendEvent(window, WINDOWFocus);
                     break;
                 }
             }
         }
     }
 }
+
 
 void Aqua_Window_Manager::StaticKeyboardWindowManager(KeyboardData_t data)
 {
@@ -157,10 +159,11 @@ void Aqua_Window_Manager::DrawWindows()
         if (window->HasTitleBar)
         {
             graphics->DrawRectangle(window->X - 1, window->Y + 1, window->Width + 1, window->Height + 33, 0x111111);
-            graphics->DrawFilledRectangle(window->X, window->Y, window->Width, 32, 0xFFFFFF);
+            graphics->DrawFilledRectangle(window->X, window->Y, window->Width, 32, 0xAAAAAA);
             graphics->DrawRectangle(window->X, window->Y, window->Width, 32, 0x000000);
             //string is 16 pixels high, put in middle
             graphics->DrawString(window->Title, window->X + 5, window->Y + 8, 0x000000);
+            graphics->DrawString("[X]", window->Width+60, window->Y + 8, 0xFF0000);
             //draw the buffer
             graphics->DrawBitmap(window->Buffer, window->X, window->Y + 32, window->Width, window->Height);
         }

@@ -167,7 +167,7 @@ int32_t GetMouseYPos()
 
 void MouseHandler(registers_t *r)
 {
-
+    
     static int8_t x = 0;
     static int8_t y = 0;
     switch (mouse_cycle)
@@ -194,11 +194,15 @@ void MouseHandler(registers_t *r)
                 State.State = MOUSE_NONE;
             }
             mouse_cycle++;
-            return;
+            for (int i = 0; i < MouseInterrupts.Length(); i++)
+            {
+                MouseInterrupts[i](State);
+            }
+            break;
         case 1:
             mouse_byte[1] = mouse_read();
             mouse_cycle++;
-            return;
+            break;
         case 2:
             mouse_byte[2] = mouse_read();
 
@@ -238,12 +242,8 @@ void MouseHandler(registers_t *r)
             mouse_cycle = 0;
             break;
     }
-
     //mouse ints
-    for (int i = 0; i < MouseInterrupts.Length(); i++)
-    {
-        MouseInterrupts[i](State);
-    }
+    
 }
 
 void AddMouseInterrupt(void (*func)(MouseState))

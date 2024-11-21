@@ -1,20 +1,20 @@
 #pragma once
 #include <libhydrix/libhydrix.h>
 
-enum class Aqua_Window_Event
+typedef enum 
 {
-    None,
-    Close,
-    Resize,
-    Move,
-    Focus,
-    Unfocus,
-    KeyPress,
-    KeyRelease,
-    MouseMove,
-    MousePress,
-    MouseRelease
-};
+    WINDOWNone,
+    WINDOWClose,
+    WINDOWResize,
+    WINDOWMove,
+    WINDOWFocus,
+    WINDOWUnfocus,
+    WINDOWKeyPress,
+    WINDOWKeyRelease,
+    WINDOWMouseMove,
+    WINDOWMousePress,
+    WINDOWMouseRelease
+} Aqua_Window_Event;
 
 typedef struct
 {

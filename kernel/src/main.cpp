@@ -92,10 +92,7 @@ Graphics graphics;
 Console console;
 Aqua_Window_Manager window_manager;
 
-void CallableDrawableWM()
-{
-    window_manager.DrawWindows();
-}
+
 
 void DrawCursor()
 {
@@ -123,7 +120,11 @@ void DrawCursor()
     graphics.DrawPixel(mx + 8, my + 9, 0x0f141c);
     graphics.DrawLine(mx + 6, my + 13, mx + 6, my + 14, 0x0f141c);
 }
-
+void CallableDrawableWM()
+{
+    window_manager.DrawWindows();
+    DrawCursor();
+}
 
 limine_memmap_response *limine_memmap_us; 
 limine_hhdm_response *hhdm_memmap;
@@ -174,7 +175,7 @@ extern void kernel_main() {
     string* InitFailures = new string[100];
     graphics.Init((uint32_t*)framebuffer->address, framebuffer->width, framebuffer->height, framebuffer->pitch, framebuffer->bpp, framebuffer->red_mask_shift, framebuffer->green_mask_shift, framebuffer->blue_mask_shift, framebuffer->red_mask_size, framebuffer->green_mask_size, framebuffer->blue_mask_size);
     console.Init(&graphics, 16, false);
-    window_manager = Aqua_Window_Manager(&graphics);
+    
 
     graphics.Clear();
     BMPI tridentstartup;
@@ -251,22 +252,8 @@ extern void kernel_main() {
     /// # START #
     /// #########
     Taskbar taskbar(&graphics);
-    graphics.SetHz(200);
+    graphics.SetHz(60);
     
-    Aqua_Window* window = window_manager.CreateShallowWindow(800, 600);
-    window->Title = "Wimdowns";
-    window->DrawHandler = [](uint* buffer)
-    {
-        memset(buffer, 0xFF0000, 800 * 600);
-    };
-    window->X = 100;
-    window->Y = 100;
-    window->EventHandler = [](Aqua_Window_Event event, void* data)
-    {
-        return;
-    };
-    window->HasTitleBar = true;
-    window_manager.SetActiveWindow(window);
     while (true)
     {
         console.Clear();
@@ -274,9 +261,8 @@ extern void kernel_main() {
         console.WriteLine("");
         console.WriteLine("");
         taskbar.Draw();
-        
         DrawCursor();
-        graphics.Display(CallableDrawableWM);
+        graphics.Display();
     }
     halt();
 }
